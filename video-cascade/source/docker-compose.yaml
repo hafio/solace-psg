@@ -1,0 +1,19 @@
+name: video-cascade-project
+
+services:
+  source:
+    container_name: source-cascade
+    image: sol-cctv/src-cas:60.0
+    environment:
+      - SOURCE_CASCADES_0_ENABLED=true
+      - SOURCE_CASCADES_0_CAMERAID=4KVID
+      - SOURCE_CASCADES_0_RTSPURL=rtsp://10.10.10.189:14888/test3
+      - SOURCE_CASCADES_0_ONDEMAND=false
+      - SOLACE_HOST=tcp://10.10.10.189:55554
+      - SOLACE_MESSAGEVPN=cctv
+      - SOLACE_CONNECTRETRIES=-1
+      - SOLACE_CLIENTUSERNAME=default
+      - SOLACE_CLIENTPASSWORD=default
+      - LOGGING_LEVEL_ROOT=INFO
+      - RTSP_BUFFERSIZE=25000
+      - RTSP_FPS=30

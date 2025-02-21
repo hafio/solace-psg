@@ -1,6 +1,6 @@
 # RTSP Streaming from Video File and/or Webcam
 
-This uses (MediaMTX)[https://github.com/bluenviron/mediamtx] v1.11.3 and (FFMpeg)[https://ffmpeg.org/] v7.1-full to create a RTSP Server to stream either from a video file or a Web Camera.
+This uses [MediaMTX](https://github.com/bluenviron/mediamtx) v1.11.3 and [FFMpeg](https://ffmpeg.org/) v7.1-full to create a RTSP Server to stream either from a video file or a Web Camera.
 
 You can refer to `mediamtx.yml` for the below examples and the explanation of each ffmpeg command.
 

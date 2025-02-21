@@ -710,12 +710,12 @@ paths:
     # -c = codec
     # -f = file format container
   webcam:
-    runOnDemand: ffmpeg -f dshow -rtbufsize 200M -framerate 30 -video_size 3840x2160 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 30 -video_size 1920x1080 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
     # -f dshow = input using dshow (vfwcap is deprecated)
     # -rtbufsize = real-time frame memory buffer size
     # -framerate = input framerate, USB cameras usually support a number of frame rates so should specify what rate the input is
     # -video_size = input video resolution. similar to framerate (USB cameras support a range)
-    # -i = USB Device name. Use `ffmpeg -f dshow -list_devices true -i dummy` to get list of USB Device Names
+    # -i = USB Device name. Use `ffmpeg -f dshow -list_devices true -i dummy` to get list of USB Device Names. Also use ffmpeg -f dshow -list_options true -i video="<USB Device Name>"
     # -vf = video filter. used to perform many things. this example is used to add box + text
     # -vcodec = video codec
     # -preset = lib264 encoding preset profile to use (ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow) - https://trac.ffmpeg.org/wiki/Encode/H.264

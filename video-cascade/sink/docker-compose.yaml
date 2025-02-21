@@ -1,0 +1,21 @@
+name: sol-cctv-sink-cascade-project
+
+services:
+  cam01:
+    container_name: sol-cctv-sink-cascade
+    image: sol-cctv/sink-cas:60.0
+    environment:
+      - RTSP_SERVERPORT=14900
+      - SINK_SUBFROMDURABLEQUEUE=false
+      - SINK_BUFFERENABLED=false
+      - SINK_BUFFERQUEUEPOSTFIX=bufferChannel
+      - SOLACE_HOST=tcp://10.10.10.189:55554
+      - SOLACE_MESSAGEVPN=cctv
+      - SOLACE_CONNECTRETRIES=-1
+      - SOLACE_CLIENTUSERNAME=default
+      - SOLACE_CLIENTPASSWORD=default
+      - LOGGING_LEVEL_ROOT=INFO
+      - RTSP_BUFFERSIZE=25000
+      - RTSP_FPS=30
+    ports:
+      - 14900:14900

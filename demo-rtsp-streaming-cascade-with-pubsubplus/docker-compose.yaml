@@ -1,0 +1,85 @@
+name: rtsp-streaming-demo
+
+services:
+  # mediamtx:
+    # container_name: MediaMTX
+    # image: bluenviron/mediamtx:latest-ffmpeg
+    # restart: always
+    # volumes:
+      # - "./mediamtx/mediamtx.yml:/mediamtx.yml"
+      # - "./mediamtx/test.mp4:/test.mp4"
+      # - "./mediamtx/out.mp4:/out.mp4"
+      # - "./mediamtx/okinawa.mp4:/okinawa.mp4"
+    # ports:
+      # - 14888:14888
+  broker:
+    container_name: Solace-PubSubPlus-Standard-Single
+    image: solace/solace-pubsub-standard:latest
+    volumes:
+      - "storage-group:/var/lib/solace"
+    shm_size: 1g
+    ulimits:
+      core: -1
+      nofile:
+        soft: 2448
+        hard: 6592
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 1
+    ports:
+    #Port Mappings:  With the exception of SMF, ports are mapped straight
+    #through from host to container.  This may result in port collisions on
+    #commonly used ports that will cause failure of the container to start.
+      #Web transport
+      - '58008:8008'
+      #Web transport over TLS
+      - '51443:1443'
+      #SEMP over TLS
+      - '51943:1943'
+      #MQTT Default VPN
+      - '51883:1883'
+      #AMQP Default VPN over TLS
+      - '55671:5671'
+      #AMQP Default VPN
+      - '55672:5672'
+      #MQTT Default VPN over WebSockets
+      - '58000:8000'
+      #MQTT Default VPN over WebSockets / TLS
+      - '58443:8443'
+      #MQTT Default VPN over TLS
+      - '58883:8883'
+      #SEMP / PubSub+ Manager
+      #REST Default VPN
+      - '58080:8080'
+      - '59000:9000'
+      #REST Default VPN over TLS
+      - '59443:9443'
+      #SMF
+      - '55554:55555'
+      #SMF Compressed
+      - '55003:55003'
+      #SMF over TLS
+      - '55443:55443'
+      #SSH connection to CLI
+      - '52222:2222'
+    env_file: sol-cctv.env
+      
+  src-cas:
+    container_name: source-cascade
+    image: solace-rtsp-source-cascade:1.0.0
+    env_file: sol-cctv.env
+    depends_on:
+      - broker
+      #- mediamtx
+      
+  sink-cas:
+    container_name: sink-cascade
+    image: solace-rtsp-sink-cascade:1.0.0
+    env_file: sol-cctv.env
+    ports:
+      - 14900:14900
+    depends_on:
+      - broker
+volumes:
+  storage-group:
