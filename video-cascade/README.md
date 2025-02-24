@@ -4,6 +4,8 @@ This references [Solace CCTV Solution](https://github.com/orgs/solace-sg-cctv) a
 
 Please refer to the relevant repositories for the source code. I have only include the container images for easier reference.
 
+[](resources/video-cascade.png)
+
 # Run
 
 This folder only contains the source and sink cascade components and does not include the management and gui components. It also does not include Solace PubSub+ and the Source RTSP (e.g. MediaMTX) component.
