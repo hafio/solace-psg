@@ -4,6 +4,8 @@ This folder consists of 2 modules / components:
 1. Streaming RTSP over Solace PubSub+
 2. Object Detection (using pre-trained AI models) on RTSP Stream via Solace Video Cascade Solution
 
+![Objection Detection Hailo AI Model](resources/obj-detect.png)
+
 # Part 1: Streaming RTSP over Solace PubSub+ 
 
 ### 1. Start RTSP Server / Source
@@ -52,11 +54,14 @@ Refer to [DeGirum Hailo Examples](https://github.com/DeGirum/hailo_examples) and
 - https://hub.degirum.com/models/manage (DeGirum AI Hub Model Zoo)
 
 1. Execute `git clone https://github.com/DeGirum/hailo_examples`
+2. Install DeGirum as per above github instructions
 2. Download `rtsp.py` from this folder
 3. Update configurations of `rtsp.py` 
    - Download other models from DeGirum AI Hub (optional)
 4. Execute `python rtsp.py`
 > `python rtsp.py --help|-h|?` brings up the help menu and available (downloaded) pre-trained models
+
+## Option 2C: Using 
 
 # Other References
 
