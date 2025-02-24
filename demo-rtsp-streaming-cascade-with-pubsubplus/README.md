@@ -23,7 +23,7 @@ Use the `docker-compose.yaml` file to spin up:
 
 There are various options to perform object detection on RTSP stream:
 
-## Option 2A: Using GStreamer + Hailo Models + Raspberry Pi
+## Option 2A: Using GStreamer + Hailo Models + Raspberry Pi AI HAT+
 
 Refer to [Solace AI Accelerator Video Detection](https://github.com/acagnetti/solace-ai-accelerator-video-detection). Additional links to read/watch/refer:
 - https://www.youtube.com/watch?v=Z6aYwU8xnsA
@@ -47,7 +47,7 @@ python detection_rtsp.py
 ```
 > all files above are in the corresponding repositories. The code in `detection_rtsp.py` is not fine-tuned or tweak and simply a MVP/POC.
 
-## Option 2B: Using DeGirum
+## Option 2B: Using DeGirum + Hailo Models + Raspberry Pi AI HAT+
 
 Refer to [DeGirum Hailo Examples](https://github.com/DeGirum/hailo_examples) and [Object Detection on RTSP Stream](https://community.hailo.ai/t/object-detection-on-an-rtsp-stream/8232).
 - https://github.com/SolaceSamples/solace-samples-python
@@ -61,7 +61,9 @@ Refer to [DeGirum Hailo Examples](https://github.com/DeGirum/hailo_examples) and
 4. Execute `python rtsp.py`
 > `python rtsp.py --help|-h|?` brings up the help menu and available (downloaded) pre-trained models
 
-## Option 2C: Using 
+## Option 2C: Using DeGirum + intel models
+
+TODO
 
 # Other References
 
