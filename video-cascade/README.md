@@ -4,7 +4,7 @@ This references [Solace CCTV Solution](https://github.com/orgs/solace-sg-cctv) a
 
 Please refer to the relevant repositories for the source code. I have only include the container images for easier reference.
 
-[](resources/video-cascade.png)
+![Solace Video Gateway/Cascade Solution](resources/video-cascade.png)
 
 # Run
 
