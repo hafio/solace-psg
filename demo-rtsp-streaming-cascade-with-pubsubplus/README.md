@@ -45,7 +45,7 @@ source setup_env.sh
 cd basic_pipelines
 python detection_rtsp.py
 ```
-> all files above are in the corresponding repositories. The code in `detection_rtsp.py` is not fine-tuned or tweak and simply a MVP/POC.
+> all files above are in the corresponding repositories. The code in `detection_rtsp.py` is MVP/POC.
 
 ## Option 2B: Using DeGirum + Hailo Models + Raspberry Pi AI HAT+
 
@@ -55,11 +55,17 @@ Refer to [DeGirum Hailo Examples](https://github.com/DeGirum/hailo_examples) and
 
 1. Execute `git clone https://github.com/DeGirum/hailo_examples`
 2. Install DeGirum as per above github instructions
+   - Ensure virtual environment is setup and activated `python3 -m venv degirum_env` and `source degirum_env/bin/activate`
 2. Download `rtsp.py` from this folder
 3. Update configurations of `rtsp.py` 
    - Download other models from DeGirum AI Hub (optional)
 4. Execute `python rtsp.py`
-> `python rtsp.py --help|-h|?` brings up the help menu and available (downloaded) pre-trained models
+
+**Alternatively**, `run.sh` provides an interactive way to run `rtsp.py`
+
+> `python rtsp.py --help|-h|?` brings up the help menu and available (downloaded) pre-trained models.
+>
+> Code in `rtsp.py` is MVP/POC.
 
 ## Option 2C: Using DeGirum + intel models
 
