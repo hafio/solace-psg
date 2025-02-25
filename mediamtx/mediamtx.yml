@@ -710,7 +710,9 @@ paths:
     # -c = codec
     # -f = file format container
   webcam:
-    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 30 -video_size 1920x1080 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    #runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 640x480 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 1280x720 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    #runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 1920x1080 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
     # -f dshow = input using dshow (vfwcap is deprecated)
     # -rtbufsize = real-time frame memory buffer size
     # -framerate = input framerate, USB cameras usually support a number of frame rates so should specify what rate the input is
@@ -723,3 +725,39 @@ paths:
     # -an = remove audio
     # -f file format container
   all_others:
+
+
+
+
+#### Hamlyn's Dell Webcam settings:
+# DirectShow video device options (from video devices)
+#  Pin "Capture" (alternative pin name "0")
+#   pixel_format=yuyv422  min s=640x480 fps=30 max s=640x480 fps=30
+#   pixel_format=yuyv422  min s=640x480 fps=30 max s=640x480 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=yuyv422  min s=640x360 fps=30 max s=640x360 fps=30
+#   pixel_format=yuyv422  min s=640x360 fps=30 max s=640x360 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=yuyv422  min s=1280x720 fps=24 max s=1280x720 fps=24
+#   pixel_format=yuyv422  min s=1280x720 fps=24 max s=1280x720 fps=24 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=yuyv422  min s=1280x720 fps=30 max s=1280x720 fps=30
+#   pixel_format=yuyv422  min s=1280x720 fps=30 max s=1280x720 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   vcodec=mjpeg  min s=640x480 fps=24 max s=640x480 fps=30
+#   vcodec=mjpeg  min s=640x480 fps=24 max s=640x480 fps=30 (pc, bt470bg/bt709/unknown, center)
+#   vcodec=mjpeg  min s=1280x720 fps=24 max s=1280x720 fps=60.0002
+#   vcodec=mjpeg  min s=1280x720 fps=24 max s=1280x720 fps=60.0002 (pc, bt470bg/bt709/unknown, center)
+#   vcodec=mjpeg  min s=1920x1080 fps=24 max s=1920x1080 fps=60.0002
+#   vcodec=mjpeg  min s=1920x1080 fps=24 max s=1920x1080 fps=60.0002 (pc, bt470bg/bt709/unknown, center)
+#   vcodec=mjpeg  min s=2560x1440 fps=24 max s=2560x1440 fps=30
+#   vcodec=mjpeg  min s=2560x1440 fps=24 max s=2560x1440 fps=30 (pc, bt470bg/bt709/unknown, center)
+#   vcodec=mjpeg  min s=3840x2160 fps=24 max s=3840x2160 fps=30
+#   vcodec=mjpeg  min s=3840x2160 fps=24 max s=3840x2160 fps=30 (pc, bt470bg/bt709/unknown, center)
+#   pixel_format=nv12  min s=640x480 fps=30 max s=640x480 fps=30
+#   pixel_format=nv12  min s=640x480 fps=30 max s=640x480 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=nv12  min s=640x360 fps=30 max s=640x360 fps=30
+#   pixel_format=nv12  min s=640x360 fps=30 max s=640x360 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=nv12  min s=1280x720 fps=30 max s=1280x720 fps=30
+#   pixel_format=nv12  min s=1280x720 fps=30 max s=1280x720 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#   pixel_format=nv12  min s=1920x1080 fps=30 max s=1920x1080 fps=30
+#   pixel_format=nv12  min s=1920x1080 fps=30 max s=1920x1080 fps=30 (tv, bt470bg/bt709/unknown, topleft)
+#  Pin "Capture" (alternative pin name "1")
+#   pixel_format=nv12  min s=640x480 fps=30 max s=640x480 fps=30
+#   pixel_format=nv12  min s=640x480 fps=30 max s=640x480 fps=30 (tv, bt470bg/bt709/unknown, topleft)
