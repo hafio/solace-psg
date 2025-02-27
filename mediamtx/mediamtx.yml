@@ -709,10 +709,13 @@ paths:
     # -i = input file name
     # -c = codec
     # -f = file format container
-  webcam:
+  webcam-laptop:
     #runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 640x480 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
-    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 1280x720 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    #runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 1280x720 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
     #runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 24 -video_size 1920x1080 -i video="Dell Webcam WB7022" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam
+    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -pixel_format yuyv422 -framerate 30 -video_size 1280x720 -i video="OV02C10" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam-laptop
+  webcam-usb:
+    runOnDemand: ffmpeg -f dshow -rtbufsize 10M -framerate 30 -video_size 800x600 -i video="USB Camera" -vf "[in]drawbox=x=0:y=0:w=700:h=60:color=black@1:t=fill, drawtext=text='%{localtime}':fontfile=Aptos-Mono-Bold.ttf:fontsize=60:fontcolor=white:x=10:y=10" -vcodec libx264 -preset ultrafast -tune zerolatency -an -f rtsp rtsp://localhost:14888/webcam-usb
     # -f dshow = input using dshow (vfwcap is deprecated)
     # -rtbufsize = real-time frame memory buffer size
     # -framerate = input framerate, USB cameras usually support a number of frame rates so should specify what rate the input is
