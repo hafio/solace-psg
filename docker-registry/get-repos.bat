@@ -7,8 +7,8 @@ if "%1"=="tags" (
 		echo "Missing Repository Name"
 		exit
 	) else (
-		curl -s "%REG_URL%/v2/%2/tags/list" | jq .tags
+		curl "%REG_URL%/v2/%2/tags/list" | jq.exe .tags
 	)
 ) else (
-    curl -s "%CATALOG%/v2/_catalog" | jq .repositories
+    curl -s "%REG_URL%/v2/_catalog" | jq.exe .repositories
 )
