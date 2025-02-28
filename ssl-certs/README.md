@@ -10,6 +10,7 @@ Read https://deliciousbrains.com/ssl-certificate-authority-for-local-https-devel
 Usage: gen-cert.sh [ec]
   If "ec" is specified, certificates will be generated using Elliptical Curve Cryptography (ECC) instead of RSA.
 ```
+> Please make sure to change `ROOT_PASS` and `PASS` in the file.
 
 All certificate details (CN, Org, OU, etc) including password are specified as configuration within the bash script. Please update them accordingly
 
