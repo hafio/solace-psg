@@ -21,7 +21,6 @@ if len(sys.argv) >= 2:
 				print(f"  {d}")
 		exit()
 	else:
-		print(len(sys.argv))
 		video_source = sys.argv[1]
 else:
 	video_source = "rtsp://10.10.10.143:14888/webcam"  # Replace with your camera RTSP URL
