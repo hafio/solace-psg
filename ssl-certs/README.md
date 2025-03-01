@@ -7,13 +7,28 @@ Read https://deliciousbrains.com/ssl-certificate-authority-for-local-https-devel
 # `gen-cert.sh`
 
 ```bash
-Usage: gen-cert.sh [ec]
-  If "ec" is specified, certificates will be generated using Elliptical Curve Cryptography (ECC) instead of RSA.
+Usage: gen-cert.sh [ecc] [OPTIONS]
+	[ecc] : if this is specified, certificated will be generated with Elliptical Curve Cryptography (ECC) instead of RSA.
+  Options:
+    --root-cert-prefix [prefix] : Script will append prefix with '.crt' and '.key' for '-CA' and '-CAkey' used to sign server certificate. Value cannot be 'server'.
+    --root-pass [pass] : Password to be used for root certificate key. Leave out parameter to not use any password.
+    --server-pass [pass] : Password to be used for server certificate key. Leave out parameter to not use any password."
 ```
-> Please make sure to change `ROOT_PASS` and `PASS` in the file.
 
 All certificate details (CN, Org, OU, etc) including password are specified as configuration within the bash script. Please update them accordingly
 
 # `show-cert-details.sh`
 
-Use to display certificate information. If certificate is password protected, it will prompt for password. This script will switch between pem/der certificate formats.
+```bash
+Usage: show-cert-details.sh <certificate/csr file>
+```
+
+To display certificate information. If certificate is password protected, it will prompt for password. This script will switch between pem/der certificates, and CSR.
+
+# `verify-cert.sh`
+
+```bash
+Usage: $0 <server certificate> <root certificate> [intermediate certificate]
+```
+
+To validate server certificate with root certificate.

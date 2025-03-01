@@ -1,10 +1,10 @@
 #!/bin/bash
 
 if [[ -z "$1" ]]; then
-	echo "Usage: $0 [certificate]"
+	echo "Usage: $0 <file>"
 	exit
 elif [[ ! -f "$1" ]] || [[ -d "$1" ]]; then
-	echo "Certificate file '$1' not found"
+	echo "File '$1' not found"
 	exit
 fi
 
