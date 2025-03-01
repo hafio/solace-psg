@@ -100,10 +100,12 @@ if ${USE_EC}; then
 	exit 1
 
 else
-	echo -n "Generating Root Certificate and Key..."
-	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -keyout ${ROOT_KEY} -out ${ROOT_CERT} ${PARM_ROOT_PASS} -subj "${RSUBJ}" -addext "subjectAltName=${SAN}" 2> /dev/null
-	checkExit $?
-	echo "${ROOT_PASS}" > ${ROOT_CERT_PREFIX:-CA}.pass
+	if [[ -z ${ROOT_CERT_PREFIX} ]]; then
+		echo -n "Generating Root Certificate and Key..."
+		openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -keyout ${ROOT_KEY} -out ${ROOT_CERT} ${PARM_ROOT_PASS} -subj "${RSUBJ}" -addext "subjectAltName=${SAN}" 2> /dev/null
+		checkExit $?
+		echo "${ROOT_PASS}" > ${ROOT_CERT_PREFIX:-CA}.pass
+	fi
 	
 	echo -n "Generating Server CSR and Key..."
 	openssl req -newkey rsa:4096 ${PARM_PASS} -keyout server.key -out server.csr -subj "${SUBJ}" -addext "subjectAltName=${SAN}" 2> /dev/null

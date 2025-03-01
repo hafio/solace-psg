@@ -32,3 +32,21 @@ Usage: $0 <server certificate> <root certificate> [intermediate certificate]
 ```
 
 To validate server certificate with root certificate.
+
+# Add root certificate to operating system
+
+Refer to https://manuals.gfi.com/en/kerio/connect/content/server-configuration/ssl-certificates/adding-trusted-root-certificates-to-the-server-1605.html
+
+## Linux
+
+```bash
+mkdir -p /usr/local/share/ca-certificates
+sudo cp <root cert> /usr/local/share/ca-certificates
+sudo update-ca-certificates
+```
+
+### Windows 
+
+```
+certutil -addstore -f "ROOT" new-root-certificate.crt
+```
