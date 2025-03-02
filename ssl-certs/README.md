@@ -4,6 +4,8 @@ This project generates a root certificate (for the Certificate Authority) and se
 
 Read https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/ for more information or google/chatbot for more information. Information about openssl and its documentation is surprisingly obstrufcated - I recommend taking an online course (e.g. Udemy etc) to understand in more details.
 
+Please note that wildcard certificates only apply for third-level domains and onwards.
+
 # `gen-cert.sh`
 
 ```bash

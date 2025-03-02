@@ -4,7 +4,7 @@
 
 ROOT_CN=authority.handy
 CN=hamaster.handy
-export SAN="DNS:*.handy,DNS:*.local,IP:10.10.10.188,IP:10.10.10.189" # export required as openssl command is crafted to use environment variables
+export SAN="DNS:*.hamaster.handy,DNS:*.local,IP:10.10.10.188,IP:10.10.10.189" # export required as openssl command is crafted to use environment variables
 CTRY=SG
 ST=
 LOC="Handy Road"
@@ -93,7 +93,7 @@ RSUBJ="${ROOT_CN}${CTRY}${ST}${LOC}${ORG}${ORG_UNIT}${EMAIL}"
 
 echo 'keyUsage = keyEncipherment, dataEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = $ENV::SAN' > server.conf
+subjectAltName = $ENV::SAN' > .server.conf
 
 if ${USE_EC}; then
 	echo "Not implemented"
@@ -113,7 +113,9 @@ else
 	echo "${PASS}" > server.pass
 	
 	echo -n "Generating Server Certificate..."
-	openssl x509 -req -in server.csr -CA ${ROOT_CERT} -CAkey ${ROOT_KEY} -CAcreateserial -passin env:ROOT_PASS -sha256 -days 365 -out server.crt -extfile server.conf
+	openssl x509 -req -in server.csr -CA ${ROOT_CERT} -CAkey ${ROOT_KEY} -CAcreateserial -passin env:ROOT_PASS -sha256 -days 365 -out server.crt -extfile .server.conf
 	checkExit $?
+	
+	rm .server.conf
 	
 fi
