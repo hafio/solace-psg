@@ -5,7 +5,16 @@ services:
     container_name: docker-registry
     image: registry:latest
     ports:
-      - 45000:5000
-    restart: always
+      - 45000:5000 # plain-text
+      - 45443:443 # SSL
+
+# comment out REGISTRY_HTTP_* variables and /secret volumes to use HTTP instead of HTTPS
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:443
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/secret/server.crt
+      - REGISTRY_HTTP_TLS_KEY=/secret/server.key
     volumes:
       - ./registry-data:/var/lib/registry
+      - ./server.crt:/secret/server.crt
+      - ./server.key:/secret/server.key
+    restart: always

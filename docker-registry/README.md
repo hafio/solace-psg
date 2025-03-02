@@ -1,6 +1,8 @@
 # Local / Personal Docker Registry
 
-This project shows you how to create your own docker registry in your personal environment (local/remote).
+Refer to https://www.exoscale.com/syslog/securing-private-docker-registry/.
+
+This project shows you how to create your own docker registry in your personal environment (local/remote) with SSL/TLS (HTTPS).
 
 ## Pre-requisite
 
@@ -9,8 +11,28 @@ This project shows you how to create your own docker registry in your personal e
 
 # Docker Compose
 
-Use the provided `docker-compose.yaml` file to spin up the registry instance.
-> Update the port to be exposed. The example uses port `45000` instead of the usual `5000`
+```yml
+name: project-registry
+
+services:
+  registry:
+    container_name: docker-registry
+    image: registry:latest
+    ports:
+      - 45000:5000 # plain-text
+      - 45443:443 # SSL
+
+# comment out REGISTRY_HTTP_* variables and /secret volumes to use HTTP instead of HTTPS
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:443
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/secret/server.crt
+      - REGISTRY_HTTP_TLS_KEY=/secret/server.key
+    volumes:
+      - ./registry-data:/var/lib/registry
+      - ./server.crt:/secret/server.crt
+      - ./server.key:/secret/server.key
+    restart: always
+```
 
 # Update your Docker Daemon Configuration (json)
 
@@ -31,41 +53,16 @@ Edit `/etc/docker/daemon.json`. Do the same as the instructions in Windows Deskt
 
 You might need to locate `daemon.json` if you can't find it in `/etc/docker`.
 
-# Docker Compose SSL
-
-> NOT TESTED YET
-
-If you would like to setup a secured registry, use the below `docker-compose.yaml`:
-```yaml
-name: project-registry
-
-services:
-  registry:
-    container_name: docker-registry
-    image: registry:latest
-    ports:
-      - 45443:443
-	environment:
-	  - REGISTRY_HTTP_ADDR=0.0.0.0"443
-	  - REGISTRY_HTTP_TLS_CERTIFICATE=/path/to/server/cert
-	  - REGISTRY_HTTP_TLS_KEY=/path/to/server/cert/key
-	volumes:
-	  - /image/dir:/var/lib/registry
-	  - /hostpath/to/server/cert:/path/to/server/cert
-	  - /hostpath/to/server/cert/key:/path/to/server/cert/key
-    restart: always
-```
-> `/var/lib/registry` is used to store docker registry images. If you want to externalize the storage, you can 
-
 # Utility Scripts
 
 ## `get-repos`
 
-Both Batch and Bash version of this script is available.
+Both Batch and Bash version of this script is available. `--ssl-no-revoke` has been added to batch script's curl to ignore certificate authority certificate revocation status check.
 
 ```bash
-Usage get-repos [tags] [repository]
-if "tags" is entered as the first positional argument, a repository name is expected in the second position.
-Otherwise you can just execute `get-repos` to retrieve the full list of repositories (images) in the registry.
-
-The URL of the registry is specified as a configuration within the script.
+Usage: $0 [OPTIONS]"
+'OPTIONS:
+	--tags <repo> : list available tags of Repository
+	--CA-cert <file> : specify CA certificate file to use for registries using non-public CAs
+	--url <url> : specify registry url to connect to instead of using configured url'
+```
