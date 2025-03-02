@@ -4,7 +4,7 @@
 
 ROOT_CN=authority.handy
 CN=hamaster.handy
-export SAN="DNS:*.hamaster.handy,DNS:*.local,IP:10.10.10.188,IP:10.10.10.189" # export required as openssl command is crafted to use environment variables
+export SAN="DNS:*.hamaster.handy,DNS:*.hasol.handy,IP:10.10.10.188,IP:10.10.10.189" # export required as openssl command is crafted to use environment variables
 CTRY=SG
 ST=
 LOC="Handy Road"
@@ -24,24 +24,16 @@ echoUsage() {
 	exit
 }
 concatIfNotBlank() {
-	if [[ -n "$2" ]]; then
-		echo "/$1=$2"
-	fi
+	[[ -n "$2" ]] && echo "/$1=$2"
 }
 passwordOrBlank() {
-	if [[ -n "${!1}" ]]; then
-		echo "-passout env:$1"
-	else
-		echo "-nodes"
-	fi
+	[[ -n "${!1}" ]] && echo "-passout env:$1" || echo "-nodes"
 }
 checkExit() {
-	if [[ $1 -ne 0 ]]; then
+	[[ $1 -ne 0 ]] && (
 		echo "Failed"
 		exit
-	else
-		echo "Ok"
-	fi
+	) || echo "Ok"
 }
 USE_EC=false
 ROOT_CERT_PREFIX=""
@@ -55,10 +47,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --root-cert-prefix)
       ROOT_CERT_PREFIX="$2"
-	  if [[ "${ROOT_CERT_PREFIX}" == "server" ]]; then
-		echo "Root Certificate Prefix cannot be server"
-		exit
-	  fi
+	  [[ "${ROOT_CERT_PREFIX}" == "server" ]] && (echo "Root Certificate Prefix cannot be server"; exit)
       shift 2
       ;;
     --root-pass)
