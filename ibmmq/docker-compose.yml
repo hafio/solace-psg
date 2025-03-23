@@ -1,0 +1,25 @@
+name: ibmmq
+
+services:
+  qm:
+    container_name: qm
+#    image: ibmcom/mq:latest
+    image: icr.io/ibm-messaging/mq:latest
+    ports:
+      - "11414:1414"
+      - "19443:9443"
+    environment:
+      - LICENSE=accept
+      - MQ_QMGR_NAME=QM1
+      - MQ_ADMIN_PASSWORD=admin
+      - MQ_APP_PASSWORD=Passw0rd
+      - TZ=Asia/Singapore
+    volumes:
+      - qm1data:/mnt/mqm
+#      - ./cert:/etc/mqm/pki/keys
+    stdin_open: true
+    tty: true
+    restart: always
+    
+volumes:
+ qm1data:
