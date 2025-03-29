@@ -16,8 +16,17 @@ Read https://deliciousbrains.com/ssl-certificate-authority-for-local-https-devel
 4. `openssl` configuration file `/etc/ssl/openssl.cnf` might have conflicting / overriding configuration specified. Please check the file if generated certificate does not align with specified parameters.
 5. OpenSSL trust settings are only used for root certificates. Future versions of OpenSSL will recognize this in all certificates.
 
+# Trust Stores and Key Stores
 
-# `gen-cert.sh`
+Trust stores and key stores are used to managed digital certificates and private keys. There are a number of different formats. Trust and key stores can use the same type of container (e.g. PKCS12, JKS, BKS, etc.) to store both digital certificates and private keys but they served different purposes:
+- Trust stores are used to identify the other party as "trusted". It's essentially a whitelist of external parties (both parties themselves or the issuer of the parties' certificate) to "trust".
+- Key stores are used to identify yourself to the other party. It's how one establishes its own identity during verification.
+
+The below scripts will generate or import certificates and/or keys into a PKCS12 store.
+
+# SSL Certificates Scripts
+
+## `gen-cert.sh`
 
 ```bash
 Usage: gen-cert.sh [OPTIONS]
@@ -48,7 +57,7 @@ Usage: gen-cert.sh [OPTIONS]
 
 All certificate details (CN, Org, OU, etc) including password are specified as configuration within the bash script. Please update them accordingly
 
-# `show-cert-details.sh`
+## `show-cert-details.sh`
 
 ```bash
 Usage: show-cert-details.sh <certificate/csr file>
@@ -56,13 +65,70 @@ Usage: show-cert-details.sh <certificate/csr file>
 
 To display certificate information. If certificate is password protected, it will prompt for password. This script will switch between pem/der certificates, and CSR.
 
-# `verify-cert.sh`
+## `verify-cert.sh`
 
 ```bash
 Usage: $0 <server certificate> <root certificate> [intermediate certificate]
 ```
 
 To validate server certificate with root certificate.
+
+# Trust/Key Store Scripts
+
+## `gen-store.sh`
+
+```bash
+Usage: gen-store.sh <PARAMETERS> [OPTIONS] [Store]
+
+        This script will import the keys/certificates into [Store] or generate a new store if it doesn't exist. This script only supports PKCS12 stores.
+
+        Documentation: https://github.com/hafio/solace-psg/tree/main/ssl-certs
+
+        Parameters (mandatory fields):
+          --cert <filename> : Server/Client certificate to be stored. Repeat for multiple entries.
+
+        Options:
+          [Store] : Store output filename. Either specify this option or [Store], not both.
+          --out <filename> : Store output filename. Either specify this option or [Store], not both.
+          --key <filename> : Private key used to generate certificates. Key store will be created if this is specified.  Repeat for multiple entries.
+          --keypass <password> : Password used to generate private key.
+          --cert-chain <filename> : Certificate Authority root certificate used to sign <cert>. Repeat for intermediate certificate if required. Should only be used in conjunction with --key.
+          --pass <password> : Store password. If not specified, script will prompt for one.
+```
+
+| Script Parameters    | Description                                                                                                                                                                                     |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--cert`             | Mandatory. Used to specify the certificates to import into the trust/key store.                                                                                                                 |
+| `[Store]` or `--out` | Mandatory (either one). Used to specify the trust/key store output filename.                                                                                                                    |
+| `--key`              | Optional. Used to specify the private keys (used in certificate generation) to import alongside the certificates into the trust/key store. This will create a `PrivateKeyEntry` when specified. |
+| `--keypass`          | Optional. Used to specify the passphrase used to encrypt the private keys if any. To be used in conjunction with `--key`                                                                        |
+| `--cert-chain`       | Optional. Used to specify the certificate chain (root and/or intermediate certificates) when importing `PrivateKeyEntry`. This will apply for all certificates.                                 |
+| `--pass`             | Optional. Used to specify the passphrase for the trust/key store. If this is not specified, the script will prompt for one.                                                                     |
+
+## `show-store-entries.sh`
+
+```bash
+Usage: show-store-entries.sh <store> [pass]
+	
+	Does a simple keytool -list.
+	
+	if [pass] is not provided, script will prompt for store passphrase.
+```
+
+## `search-store.sh`
+
+```bash
+Usage: search-store.sh <trust/key store> <certificate> [certificates] [OPTIONS]
+	
+	Script searches the trust/key store for certificates by comparing certificate's SHA256 fingerprint.
+	
+	Repeat [certificates] for multiple search entries.
+	
+	OPTIONS:
+	  --pass <password> : specify the passphrase for the store. Script will prompt for password if not specified.
+```
+
+To search trust/key store for matching certificates.
 
 # Add root certificate to operating system
 

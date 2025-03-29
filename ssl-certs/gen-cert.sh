@@ -11,14 +11,14 @@ ROOT_ORG_UNIT="IT"
 ROOT_EMAIL=
 ROOT_SAN="DNS:authority.handy,DNS:*.hamaster.handy,DNS:*.hasol.handy"
 
-SVR_CN="Hamaster"
+SVR_CN="DNS @ Handy Road"
 SVR_CTRY=SG
 SVR_ST=
 SVR_LOC="Handy Road"
 SVR_ORG="HAFIO"
-SVR_ORG_UNIT="Home"
-SVR_EMAIL="home@hafio.tv"
-SVR_SAN="DNS:hamaster.handy,DNS:*.hamaster.handy,DNS:*.hasol.handy"
+SVR_ORG_UNIT=""
+SVR_EMAIL="dns@hafio.tv"
+SVR_SAN="DNS:dns.handy"
 
 ########################################################################################
 ############################## CHANGE CONFIG VALUES ABOVE ##############################
@@ -36,10 +36,10 @@ echoUsage() {
 	Documentation: https://github.com/hafio/solace-psg/tree/main/ssl-certs
 	
   Options:
-    --root-cert-name <name> : Root certificate output filename prefix.
+    --root-cert-name <name> : Root certificate output filename prefix. Default is 'CA'.
     --root-cert-prefix <prefix> : Root certificate input filename prefix. This option will skip root certificate creation.
     --root-pass <pass> : Password to be used for root certificate key.
-    --server-cert-name <prefix> : Server certificate output filename prefix.
+    --server-cert-name <prefix> : Server certificate output filename prefix. Default is 'server'.
     --server-pass <pass> : Password to be used for server certificate key."
 	exit 1
 }
@@ -78,7 +78,6 @@ while [[ $# -gt 0 ]]; do
 		exit 1
 	  fi
 	  ROOT_FILE_PREFIX="$2"
-	  
 	  shift 2
 	  ;;
     --root-cert-prefix)
@@ -104,7 +103,7 @@ while [[ $# -gt 0 ]]; do
 		exit 1
 	  fi
 	  if [[ "$2" == "CA" ]] || [[ "$2" == "${ROOT_FILE_PREFIX}" ]]; then
-		echo "--server-cert-name cannot be 'CA' or the same as --root-cert-name"
+		echo "--server-cert-name cannot be 'CA' or the same as --root-cert-name and --root-cert-prefix"
 		exit 1
 	  fi
 	  SVR_FILE_PREFIX="$2"
