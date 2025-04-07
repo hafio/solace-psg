@@ -1,4 +1,4 @@
-# Local / Personal Docker Registry
+# Local / Personal Docker Registry (Unsecured)
 
 Refer to https://www.exoscale.com/syslog/securing-private-docker-registry/.
 
