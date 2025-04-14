@@ -38,6 +38,8 @@ An optional company name []:Solace
 > - New private key generated without password
 > - Utilizing RSA 4096 bit encryption
 > - User will be prompted for Subject values (i.e. Common Name, Country, State, etc.)
+> - Encryption Algorithm is set to `rsa:4096`. 
+> - `-nodes` indicates no password. If password required, use `-passin` parameter.
 > - `-addext basicConstraints` is required to indicate if this certificate is a Certificate Authority
 > - `-addext keyUsage` is required to indicate the purpose of this certificate. Applications can reject certificates if Key Usage are not utilized correctly.
 > - `-addext extendedKeyUsage` is required to indicate additional purpose of this certificate. Applications can reject certificates if Key Usage and Extended Key Usage are not utilized correctly.
