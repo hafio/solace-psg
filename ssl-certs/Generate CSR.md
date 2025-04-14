@@ -7,9 +7,9 @@ This page will try to explain how to generate your own CSR to be passed to the C
 Execute `openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" -addext "extendedKeyUsage=critical,serverAuth"` to get the below output:
 
 ```bash
-user@box:~# openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr \\n
--addext "basicConstraints=critical,CA:FALSE" \\n
--addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" \\n
+user@box:~# openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr \
+-addext "basicConstraints=critical,CA:FALSE" \
+-addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" \
 -addext "extendedKeyUsage=critical,serverAuth"
 ..+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+.........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+.+.....+....+......+........+.+.....+............+...+.......+............+...+.....+....+...........+...+.........+...............+............+.+..+...+....+........+.......+......+........+....+......+...........+...+.............+........+......................+..+......+.......+...............+..............+.............+......+.....+.+.........+......+...............+.....+.............+...+..+..........+........+.............+..+...............+...+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 .............+.+...........+...+.......+..+..........+........+...+......+.+............+..+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*...+....+......+...+..+.+.....+...+...................+..+.+..............+......+....+...+...+........+......+.+..+......+............+...+.+.....+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*....+...+......+..+.............+.................+.......+.....+.............+..+............+.+............+..+......+.......+...............+.....+...............+.+.....+.........+................+.....+.+...........+...+.+......+............+...........+.......+...+..+.......+..+...+.......+...+......+..+....+......+..+......+..........+......+.....+.....................+............+.+...........+...+...+..........+.......................+...............+.......+..+..................+...+......+......+.......+..+....+.....+....+...+.........+.....+....+......+.........+.........+.....+...+....+......+...+.....................+........+...............+.......+...+...........+.+......+.....+..........+........+............+...............+....+...+........+...+.+.........+..+...+......................+..+......+...............+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -52,11 +52,7 @@ add `-subj "<VALUES>"` where `<values>` are a concatenation of the below:
 > - Common Name: `/CN=XXXXX+`
 > - Email: `/emailAddress=XXXXX+@XXX+.XXX+`
 
-Example: `openssl req -newkey rsa:4096 -nodes \
--keyout server.key -out server.csr -subj "/CN=Test Certificate/C=SG/O=Solace/OU=PSG/emailAddress=test@test.com" \
--addext "basicConstraints=critical,CA:FALSE" \
--addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" \
--addext "extendedKeyUsage=critical,serverAuth"`
+Example: `openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr -subj "/CN=Test Certificate/C=SG/O=Solace/OU=PSG/emailAddress=test@test.com" -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" -addext "extendedKeyUsage=critical,serverAuth"`
 
 ### If you want to add Subject Alternative Names (SAN)
 
