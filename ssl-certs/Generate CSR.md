@@ -35,7 +35,7 @@ A challenge password []:P@55w0rd
 An optional company name []:Solace
 ```
 
-> - New private key generated 
+> - New private key generated without password
 > - Utilizing RSA 4096 bit encryption
 > - User will be prompted for Subject values (i.e. Common Name, Country, State, etc.)
 > - `-addext basicConstraints` is required to indicate if this certificate is a Certificate Authority
@@ -52,4 +52,16 @@ add `-subj "<VALUES>"` where `<values>` are a concatenation of the below:
 > - Common Name: `/CN=XXXXX+`
 > - Email: `/emailAddress=XXXXX+@XXX+.XXX+`
 
-Example: `openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr -subj "/CN=Test Certificate/C=SG/O=Solace/OU=PSG/emailAddress=test@test.com" -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" -addext "extendedKeyUsage=critical,serverAuth"`
+Example: `openssl req -newkey rsa:4096 -nodes \
+-keyout server.key -out server.csr -subj "/CN=Test Certificate/C=SG/O=Solace/OU=PSG/emailAddress=test@test.com" \
+-addext "basicConstraints=critical,CA:FALSE" \
+-addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" \
+-addext "extendedKeyUsage=critical,serverAuth"`
+
+### If you want to add Subject Alternative Names (SAN)
+
+add `-addext "subjectAltName=<SAN>` where `<SAN>` is a comma-separated-values of the below:
+> - Domain Name: `DNS:<hostname>`. This supports wildcard hostnames for Third-Level-Domains (TLDs)
+> - IP Address: `IP:X.X.X.X`.
+
+Example: `openssl req -newkey rsa:4096 -nodes -keyout server.key -out server.csr -subj "/CN=Test Certificate/C=SG/O=Solace/OU=PSG/emailAddress=test@test.com" -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature,keyEncipherment,dataEncipherment" -addext "extendedKeyUsage=critical,serverAuth" -addext "subjectAltName=DNS:messaging.solace.com,DNS:*.solace.com,IP:10.10.10.10"`
