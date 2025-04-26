@@ -134,13 +134,22 @@ To search trust/key store for matching certificates.
 
 Refer to https://manuals.gfi.com/en/kerio/connect/content/server-configuration/ssl-certificates/adding-trusted-root-certificates-to-the-server-1605.html
 
-## Linux
+## Linux (Debian based)
 
 ```bash
 mkdir -p /usr/local/share/ca-certificates
 sudo cp <root cert> /usr/local/share/ca-certificates
 sudo update-ca-certificates
 ```
+
+## Linux (RHEL)
+
+```bash
+mkdir -p /etc/pki/ca-trust/source/anchors
+sudo cp <root cert> /etc/pki/ca-trust/source/anchors/.
+sudo update-ca-trust
+```
+> check out `/etc/pki/ca-trust/source/README` first to see which directory to put whitelist certificates.
 
 ### Windows 
 
