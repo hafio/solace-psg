@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Solace Queue Browser</title>
+  <script src="js/solclient-debug.js"></script>
+  <style>
+    body {
+        font-family: Roboto;
+        margin: 20px;
+    }
+    input, button {
+        margin: 4px;
+        padding: 4px;
+    }
+    table {
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 2px 10px;
+        text-align: left;
+        font-size: 10pt;
+    }
+    button {
+        font-size: 8pt;
+    }
+    th {
+        background: #eee;
+    }
+    .message-row:hover {
+        background: #f9f9f9;
+    }
+    .popup-container {
+        border-style: none;
+        border-width: 0px;
+        position: fixed;
+        top: 20px;
+        right: 10px;
+        margin: 0px;
+        padding: 0px;
+        pointer-events: none;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        z-index: 99999;
+    }
+    .popup {
+        background-color: #000;
+        color: #fff;
+        padding: 10px 20px 13px 20px;
+        border-radius: 5;
+        opacity: 1;
+        position: relative;
+        transition: opacity 3000ms ease;
+        margin: 5px;
+    }
+
+  </style>
+</head>
+<body>
+  <h2>Solace Queue Browser</h2>
+  <h3 id="solJSVersion"></h3>
+  <div>
+    <label>URL: <input id="url" placeholder="wss://your-solace-broker:port"></label>
+    <label>VPN: <input id="vpn" placeholder="default"></label>
+    <label>Queue Name: <input id="queue" placeholder="queue name"></label><br>
+    <label>Username: <input id="username" placeholder="default"></label>
+    <label>Password: <input id="password" type="password" placeholder="default"></label><br>
+    
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+  </div>
+
+  <h3>Publish Messages</h3>
+  <div>
+    <label>Topic: <input id="topic" value="sample/topic" size="30"></label>
+    <label>Count: <input id="publishCount" value="1" size="5"></label>
+    <button onclick="publishMessages()">Publish Binary</button>
+    <button onclick="publishXMLMessages()">Publish XML</button>
+    <input type=file id="fileAttachment" />
+    <button onclick="publishMessagesWithAttachment()">Publish File</button>
+  </div>
+  
+  <h3>Messages in Queue</h3>
+  <table id="messageTable">
+    <thead>
+      <tr><th>Guaranteed Id</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="messageTableBody"></tbody>
+  </table>
+
+
+  <script>
+  
+    function popupNotification(msg) {
+      const popMsg = document.createElement("div");
+      popMsg.textContent = msg;
+      popMsg.classList.add("popup");
+    
+      let popCtn = document.getElementById("popupContainer");
+      if (popCtn == null) {
+        popCtn = document.createElement("div");
+        popCtn.id = "popupContainer";
+        popCtn.classList.add("popup-container");
+        document.body.appendChild(popCtn);
+      }
+    
+      popCtn.insertBefore(popMsg, popCtn.firstChild);
+      popMsg.offsetWidth;
+      popMsg.style.opacity = "0";
+      setTimeout(() => {
+        setTimeout(() => {
+          popMsg.remove();
+          if (popCtn.children.length == 0)
+            popCtn.remove();
+        }, 300);
+      }, 3000);
+    }
+    
+    function handleQueueBrowserEvent(event, passedObj) {
+      switch(event) {
+        case solace.QueueBrowserEventName.UP:
+          console.log("Queue binded");
+          popupNotification("Queue Binded");
+        break;
+        
+        case solace.QueueBrowserEventName.GM_DISABLED:
+        case solace.QueueBrowserEventName.CONNECT_FAILED_ERROR:
+          console.log("Queue bind failed");
+          popupNotification("Queue bind failed");
+        break;
+        
+        case solace.QueueBrowserEventName.DOWN:
+        case solace.QueueBrowserEventName.DISPOSED:
+          console.log("Queue unbinded");
+          popupNotification("Queue unbinded");
+          
+        case solace.QueueBrowserEventName.MESSAGE:
+          addMessage(passedObj);
+        break
+        
+        default:
+          console.log(`Unhandled session event: ${event}`);
+        break;
+      }
+    }
+    
+    function handleDelQueueBrowserEvent(event, passedObj) {
+      switch(event) {
+        case solace.QueueBrowserEventName.UP:
+          console.log("Delete starting");
+          popupNotification("Delete starting");
+        break;
+        
+        case solace.QueueBrowserEventName.GM_DISABLED:
+        case solace.QueueBrowserEventName.CONNECT_FAILED_ERROR:
+          console.log("Queue bind failed");
+          popupNotification("Queue bind failed");
+        break;
+        
+        case solace.QueueBrowserEventName.DOWN:
+        case solace.QueueBrowserEventName.DISPOSED:
+        break;
+          
+        case solace.QueueBrowserEventName.MESSAGE:
+          let msgId = passedObj.getGuaranteedMessageId().toString();
+          if (delmsg.includes(msgId)) {
+            delqb.removeMessageFromQueue(messageList[msgId]);
+            document.getElementById("mr-" + msgId).remove();
+            delmsg.slice(delmsg.indexOf(passedObj.getGuaranteedMessageId().toString()));
+            popupNotification(`Removing message id ${msgId}`);
+            console.log(`Message ${msgId} (deleted)`);
+          }
+        break
+        
+        default:
+          console.log(`Unhandled session event: ${event}`);
+        break;
+      }
+    }
+  
+    function handleSessionEvent(event, passedObj) {
+      switch(event) {
+        case solace.SessionEventCode.CONNECT_FAILED_ERROR:
+          console.log(`Failed to connect to session: ${passedObj}`);
+          popupNotification("Cannot connect");
+        break;
+        
+        case solace.SessionEventCode.DISPOSED:
+        case solace.SessionEventCode.DOWN:
+          popupNotification("Disconnected");
+        break;
+        
+        case solace.SessionEventCode.UP_NOTICE:
+          console.log("Session connected");
+          popupNotification("Connected");
+          browseQueue();
+        break;
+        
+        default:
+          console.log(`Unhandled session event: ${event}`);
+        break;
+      }
+    }
+    
+    function disconnect() {
+        document.getElementById("messageTableBody").innerHTML = "";
+        try {
+          session.disconnect();
+        } catch (err) {
+          // do nothing
+        }
+        session.dispose();
+        session = null;
+    }
+
+    function connect() {
+
+      if (session != null) {
+        disconnect();
+      }
+
+      session = solace.SolclientFactory.createSession({
+        url: document.getElementById('url').value,
+        vpnName: document.getElementById('vpn').value,
+        userName: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        connectRetries: 1,
+        connectRetriesPerHost: 0,
+        includeSenderId: true,
+        reconnectRetries: 0,
+        reconnectRetryWaitInMsecs: 0,
+      });
+      
+      for (let event of solace.SessionEventCode.values) {
+        session.on(event, (solObj) => { handleSessionEvent(event, solObj); });
+      }
+      
+      session.connect();
+    }
+
+    function browseQueue() {
+      qbprop = new solace.QueueBrowserProperties({
+        connectAttempts: 1,
+        connectTimeoutInMsecs: 10000,
+        transportAcknowledgeThresholdPercentage: 1,
+        transportAcknowledgeTimeoutInMsecs: 50,
+        windowSize: 255, // 1-255
+        queueDescriptor: {
+            name: document.getElementById("queue").value,
+            type: solace.QueueType.QUEUE,
+        }
+      });
+      queuebrowser = session.createQueueBrowser(qbprop);
+      
+      for (let event of solace.QueueBrowserEventName.values) {
+        queuebrowser.on(event, (solObj) => { handleQueueBrowserEvent(event, solObj); });
+      }
+      queuebrowser.connect();
+    }
+    
+    function addMessage(msg) {
+      let msgId = msg.getGuaranteedMessageId().toString();
+      // add to js object
+      messageList[msgId] = msg;
+      
+      // add to ui table
+      let msgrow = document.createElement("tr");
+      msgrow.id = "mr-" + msgId;
+      msgrow.classList.add("message-row");
+      msgrow.innerHTML = `<td>${msgId}</td><td><button onclick="removeMessage('${msgId}')">delete</button>`;
+      document.getElementById("messageTableBody").appendChild(msgrow);
+    }
+
+
+    function removeMessage(msgId) {
+      delmsg.push(msgId);
+      if (delqb != null) {
+        delqb.disconnect();
+        delqb = null;
+      }
+      delqb = session.createQueueBrowser(qbprop);
+      for (let event of solace.QueueBrowserEventName.values) {
+        delqb.on(event, (solObj) => { handleDelQueueBrowserEvent(event, solObj); });
+      }
+      delqb.connect();
+      
+    }
+
+    function publishMessages() {
+      const topic = document.getElementById('topic').value;
+      const count = parseInt(document.getElementById('publishCount').value, 10);
+
+      if (session == null) {
+        alert('Session not connected');
+        popupNotification(`Session not connected`);
+        return;
+      }
+      for (let i = 0; i < count; i++) {
+        const message = solace.SolclientFactory.createMessage();
+        message.setDestination(solace.SolclientFactory.createTopicDestination(topic));
+        message.setBinaryAttachment(`Message ${i + 1} @ ${new Date().toLocaleTimeString()}`);
+        message.setDeliveryMode(solace.MessageDeliveryModeType.PERSISTENT);
+        session.send(message);
+        console.log(`Published message ${i + 1}`);
+      }
+    }
+    
+    function publishXMLMessages() {
+      const topic = document.getElementById('topic').value;
+      const count = parseInt(document.getElementById('publishCount').value, 10);
+
+      if (session == null) {
+        alert('Session not connected');
+        popupNotification(`Session not connected`);
+        return;
+      }
+      for (let i = 0; i < count; i++) {
+        const message = solace.SolclientFactory.createMessage();
+        message.setDestination(solace.SolclientFactory.createTopicDestination(topic));
+        message.setXmlContent(`Message ${i + 1} @ ${new Date().toLocaleTimeString()}`);
+        message.setDeliveryMode(solace.MessageDeliveryModeType.PERSISTENT);
+        session.send(message);
+        console.log(`Published message ${i + 1}`);
+      }
+    }
+    
+    async function publishMessagesWithAttachment() {
+      const topic = document.getElementById('topic').value;
+      const count = parseInt(document.getElementById('publishCount').value, 10);
+      
+      if (session == null) {
+        alert('Session not connected');
+        popupNotification(`Session not connected`);
+        return;
+      }
+      
+      const fileData = document.getElementById("fileAttachment").files[0];
+      data = await fileData.arrayBuffer();
+      for (let i = 0; i < count; i++) {
+        const message = solace.SolclientFactory.createMessage();
+        message.setDestination(solace.SolclientFactory.createTopicDestination(topic));
+        message.setBinaryAttachment(data);
+        message.setDeliveryMode(solace.MessageDeliveryModeType.PERSISTENT);
+        session.send(message);
+        console.log(`Published message ${i + 1}`);
+      }
+    }
+    
+    let session = null, queuebrowser = null, delqb = null, qbprop = null, delmsg = [], messageCount = 0, messageList = {};
+
+    const factoryProps = new solace.SolclientFactoryProperties();
+    factoryProps.profile = solace.SolclientFactoryProfiles.version10;
+    solace.SolclientFactory.init(factoryProps);
+    
+    document.getElementById("url").value = "wss://localhost:61443";
+    document.getElementById("vpn").value = "default";
+    document.getElementById("queue").value = "three";
+    document.getElementById("username").value = "default";
+    document.getElementById("password").value = "default";
+    document.getElementById("topic").value = "three";
+    document.getElementById("solJSVersion").textContent = solace.Version.summary;
+
+  </script>
+</body>
+</html>

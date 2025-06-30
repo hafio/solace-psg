@@ -1,0 +1,92 @@
+/*demo page css*/
+body {
+    font: 62.5% "Trebuchet MS", sans-serif;
+    margin: 5px;
+}
+
+.page-title {
+    text-align:     center;
+    font-weight:    bold;
+    font-size:      30px;
+    padding:        0 0 0.5em 0;
+}
+
+.page-title,
+.router-title,
+.normal-font {
+    font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif;
+}
+
+#container {
+    width:  850px;
+    margin: 0px 10px;
+}
+
+.demoHeaders {
+    margin-top: 2em;
+    font-size: 1.5em;
+    font-weight: bold;
+    width: 100%;
+}
+
+#dialog_link {
+    padding: .4em 1em .4em 20px;
+    text-decoration: none;
+    position: relative;
+}
+
+#dialog_link span.ui-icon {
+    margin: 0 5px 0 0;
+    position: absolute;
+    left: .2em;
+    top: 50%;
+    margin-top: -8px;
+}
+
+ul#icons {
+    margin: 0;
+    padding: 0;
+}
+
+ul#icons li {
+    margin: 1px;
+    position: relative;
+    padding: 2px 0;
+    cursor: pointer;
+    float: left;
+    list-style: none;
+}
+
+ul#icons span.ui-icon {
+    float: left;
+    margin: 0 4px;
+}
+
+#selectable .ui-selecting { background: #009193; }
+#selectable .ui-selected { background: #00C895; color: white; }
+#selectable { list-style-type: none; margin: 0; padding: 0; width: 20%; }
+#selectable li { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; }
+
+.toolbar { padding: 8px 2px;}
+
+.div-table { display: table; }
+.div-table-row { display: table-row; }
+.div-table-col {
+    display: table-cell;
+    min-width: 130px;
+    padding-left: 3px;
+}
+
+.control-block {
+    padding-bottom: 10px;
+}
+.control-block-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
+.control-block-header .ui-icon { float: right; }
+.control-block-content { padding: 0em; }
+.control-block-content-adv { padding: 0em; display: none;}
+
+.ui-widget-content .ui-state-default,
+.ui-widget-header .ui-state-default {
+    font-weight: bold;
+    color: #009193;
+}
