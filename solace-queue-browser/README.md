@@ -2,31 +2,45 @@
 
 ## Overview
 
-This is a open-source non-production tool that is not officially supported under Solace Customer Support policy.
+> [!IMPORTANT]
+> This is an open-source non-production tool that is not officially supported under Solace Customer Support policy.
 
-This is meant to provide Solace Queue Browsing capabilities easily:
-- List messages in queue
-- Browse (Peek) message payload content without consuming message from the queue
-- Remove message from the queue
+The application is intended to be able to run **without a backend application (e.g. web server)**.
 
-The application is intended to be able to run without a web server (with constraints) - refer to section below for explanation.
+Future versions and enhancements will include additional optional features that might require a web server to work.
 
-## Installation
+This version, as compared to other Solace Queue Browsers available, does not require SEMP credentials to work.
 
-1. Checkout this code repository.
-2. Download Solace Javascript (Browser) API from [here](https://solace.com/downloads/).
-   - Place `solclient-debug.js` or `solclient.js` in `www/js` folder.
-3. (Optional) Download HTMX framework from [here](https://htmx.org/).
-   - Place `htmx.min.js` in `www/js` folder.
-4. Either open `www/utility.html` with a browser or run the docker container `docker-compose up -d`.
+Users are expected to know the connection parameters / details.
 
-## Constraints
+## Pre-requisite
 
-1. If you don't have an internet connection or internet access to https://htmx.org/, please complete Step #3.
-2. VPN/Queue listing requires SEMP login credentials (a.k.a adminstrator / operator login credentials).
-3. Features requiring SEMP login credentials require either:
-   - Target Solace PubSub+ Broker must enable [Cross Origin Resource Sharing (CORS)](https://docs.solace.com/Services/Managing-Services.htm#managing-cross-origin-resource-sharing), or
-   - Tool to be deployed and run via Docker container
+1. Modern Browser (only browsers tested with are listed below)
+   - Edge 137+
+   - Chrome 137+
+   - Firefox 137+
+2. Solace Javascript API (Browser) v10.18.2
+
+## Installation / Running the App
+
+1. You only need `www/utility.html` from the repository - you can choose to clone the entire repository or only download the `utility.html` file.
+2. Download Solace Javascript (Browser) API from [Solace Downloads](https://solace.com/downloads/) or [Solace Products](https://products.solace.com/) (login required).
+   - Place `solclient.js` in the same folder as `utility.html` or,
+   - Place `solclient.js` in `js` folder which is of the same directory as `utility.html`.
+3. Open `utility.html` with a modern browser and you are ready to go.
+
+## Features
+
+1. List messages in Queue
+2. View message content
+3. Download message content
+4. Delete message(s) from Queue
+5. Supports Basic and OAuth2 login
+6. Supports saving/loading login credentials from local browser storage (excluding password)
+7. Limits browsing to 500MB or 1000 messages (whichever hits first) - pagination features will be available in the future.
+
+> [!NOTE]
+> When connecting to secured (SSL/TLS) endpoints, please ensure the broker server certificate is valid (i.e. CN, SAN, Dates etc. all are correct). Due to limitations of how a browser work, you might not be able to connect to invalid/unvalidated secured endpoints.
 
 ## References
 - https://docs.solace.com/API/Messaging-APIs/JavaScript-API/js-home.htm
