@@ -170,6 +170,9 @@ input, button, select {
 .bg-off-white {
 	background-color: var(--off-white);
 }
+.bg-gray {
+    background-color: var(--sol-lite-gray);
+}
 .bg-trans-gray {
 	background-color: var(--transparent-gray);
 }
@@ -1773,7 +1776,7 @@ window.addEventListener('DOMContentLoaded', async () => {
           </svg>
         </div>
       </header>
-      <header class="hidden bg-trans-gray" id="filterMessageForm">
+      <header class="bg-gray" id="filterMessageForm" style="position:sticky;top:40px">
         Message Body: <input type="text" id="filterTextBody">
         <button id="msgFilterSet">Filter</button>
         <button id="msgFilterClear">Clear</button>
