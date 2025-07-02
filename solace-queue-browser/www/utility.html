@@ -1108,6 +1108,8 @@ SolaceWebUtility.ui = {
       document.getElementById("messageListBody").innerHTML = SolaceWebUtility.ui.html.disconnectedMessageList;
       document.getElementById("msgHdrCheckbox").disabled = true;
       document.getElementById("msgHdrCheckbox").checked = false;
+      document.getElementById("filterMessageForm").classList.add("hidden");
+      SolaceWebUtility.ui.clearMessageFilter();
       document.getElementById("msgListBulkActions").classList.add("hidden");
       SolaceWebUtility.ui.resetTabHeaders(document.getElementById("msgTabHdrContent").parentElement);
       SolaceWebUtility.ui.clearAllTabs(document.getElementById("msgTabBodyContent").parentElement);
@@ -1308,7 +1310,7 @@ SolaceWebUtility.ui = {
       }
     }
   },
-  
+  // UI: trigger message download TODO add more binary file type support in future to autp append file extension and set MIME in Blob
   downloadMessage: function(msgId) {
     let dataLen = SolaceWebUtility.clientSession.queuedMessages[msgId].SWU.content.length;
     let data = new Uint8Array(dataLen);
@@ -1348,6 +1350,7 @@ SolaceWebUtility.ui = {
     }
   },
   
+  // UI: clear message filter function to reset all filter related elements
   clearMessageFilter: function() {
     document.getElementById("filterTextBody").value = "";
     document.getElementById("filterMsgList").innerHTML = SolaceWebUtility.ui.svg.filterInactive;
@@ -1357,6 +1360,7 @@ SolaceWebUtility.ui = {
     SolaceWebUtility.ui.updateDisplayCount();
   },
   
+  // UI: set message filter active. filtering is referencing queuedMessages. TODO review if this should be in another namespace (or at least part of the function broken into different namespaces).
   setMessageFilter: function() {
     if (document.getElementById("filterTextBody").value.length == 0) {
       SolaceWebUtility.ui.clearMessageFilter();
@@ -1377,6 +1381,7 @@ SolaceWebUtility.ui = {
     }
   },
   
+  // UI: function to boolean results whether the message matches the filter TODO review along with setMessageFilter() if this should be in this namespace.
   filterMatch: function(msgId) {
     return SolaceWebUtility.clientSession.queuedMessages[msgId].SWU.isText && new RegExp(document.getElementById("filterTextBody").value).test(SolaceWebUtility.clientSession.queuedMessages[msgId].SWU.content);
   },
@@ -1806,9 +1811,5 @@ window.addEventListener('DOMContentLoaded', async () => {
       </div>
     </section>
   </main>
-  <div class="hidden form-popup-container">
-    <form id="messageFilterForm">
-    </form>
-  </div>
 </body>
 </html>
