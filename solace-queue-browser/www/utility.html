@@ -4,26 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlcgASZXIAJKVyADJlcgA8JXIAPuVyADflcgAoJXIACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACVyAAhlcgAkJXIAPOVyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgAnQAAAAAAAAAAAAAAAAAAAACVyAAhlcgAppXIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyADLAAAAAAAAAAAAAAAAlcgAkJXIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAJ0AAAAAlcgASZXIAPOVyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgAIJXIAJKVyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAKCVyADJlcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyADflcgA8JXIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA+5XIAPuVyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAPCVyADflcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyADJlcgAoJXIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgAkpXIACCVyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA85XIAEkAAAAAlcgAnZXIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAJAAAAAAAAAAAAAAAACVyADLlcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAKaVyAAhAAAAAAAAAAAAAAAAAAAAAJXIAJ2VyAD/lcgA/5XIAP+VyAD/lcgA/5XIAP+VyAD/lcgA85XIAJCVyAAhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlcgAIJXIAKCVyADflcgA+5XIAPCVyADJlcgAkpXIAEkAAAAAAAAAAAAAAAAAAAAA+B8AAOAHAADAAwAAgAEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAAgAEAAMADAADgBwAA+B8AAA==">
 <style>
-ul {
-    margin: 0px 0px 0px 0px;
-    padding: 0px;
-}  
-li.tick { 
-    list-style-type: '\2714';
-    margin: 0px 0px 0px 0px;
-    padding: 0px 0px 0px 3px;
-}
-li.tick::marker {
-    color: #008000;
-}
-li.cross {
-    list-style-type: '\2718';
-    margin: 0px 0px 0px 0px;
-    padding: 0px 0px 0px 3px;
-}
-li.cross::marker {
-    color: #A00000;
-}
 :root { /* standard colors */
     --sol-green: #00c895;
     --sol-mid-green: #00AB91;
@@ -101,15 +81,9 @@ input, button, select {
     border-style: solid;
     border-width: 1px;
 }
-/* bulk delete feature is currently disabled 
-input[type=checkbox] {
-    visibility: hidden;
-	pointer-events: none;
-}
-*/
 /*
 #################################################
-################# popup related #################
+########## notification popup related. ##########
 #################################################
 */
 .bgerror {
@@ -327,6 +301,7 @@ input[type=checkbox] {
 	border-style: none;
 	color: var(--lightest-gray);
 	margin: 15px 0px;
+    padding: 0px;
 }
 .main-navi .section-navi .navi-container .navi-item {
 	border-color: #000;
@@ -472,6 +447,24 @@ message list
 .message-row-checkbox {
     /* empty css class to identify checkbox in message row */
 }
+/* -------------------------------------------------
+form popup with blur
+------------------------------------------------- */
+.form-popup-container {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+    
+	margin: 0px;
+    padding: 0px;
+    
+    height: 100vh;
+    width: 100vw;
+    
+    background-color: rgb(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
 </style>
 <script>
 
@@ -1007,8 +1000,18 @@ SolaceWebUtility.ui = {
     document.getElementById("msgTabHdrRaw").onclick = function() { SolaceWebUtility.ui.showTab(this); };
     
     // add actions to message list buttons (bulk)
-    document.getElementById("filterMsgList").onclick = function() { SolaceWebUtility.ui.showMessageFilter(); };
+    document.getElementById("filterMsgList").onclick = function() { SolaceWebUtility.ui.toggleMessageFilter(); };
     document.getElementById("deleteSelectedMsgs").onclick = function() { SolaceWebUtility.ui.confirmBulkDelMsges(); };
+    
+    // add actions to message filter buttons
+    document.getElementById("msgFilterSet").onclick = function() { SolaceWebUtility.ui.setMessageFilter(); };
+    document.getElementById("msgFilterClear").onclick = function() { SolaceWebUtility.ui.clearMessageFilter(); };
+    
+    // add "enter" for message filter text box
+    document.getElementById("filterTextBody").addEventListener("keydown", function(event) {
+        if (event.key === 'Enter')
+          SolaceWebUtility.ui.setMessageFilter();
+      });
     
     // add action to header checkbox
     document.getElementById("msgHdrCheckbox").onclick = function() { SolaceWebUtility.ui.toggleCheckboxes(this); };
@@ -1337,8 +1340,45 @@ SolaceWebUtility.ui = {
   },
   
   // UI: show message list filter panel
-  showMessageFilter: function() {
-    
+  toggleMessageFilter: function() {
+    if (document.getElementById("filterMessageForm").classList.contains("hidden")) {
+      document.getElementById("filterMessageForm").classList.remove("hidden");
+    } else {
+      document.getElementById("filterMessageForm").classList.add("hidden");
+    }
+  },
+  
+  clearMessageFilter: function() {
+    document.getElementById("filterTextBody").value = "";
+    document.getElementById("filterMsgList").innerHTML = SolaceWebUtility.ui.svg.filterInactive;
+    let msgList = document.querySelectorAll("#messageListBody tr.message-row.hidden")
+    for (let row of msgList)
+      row.classList.remove("hidden");
+    SolaceWebUtility.ui.updateDisplayCount();
+  },
+  
+  setMessageFilter: function() {
+    if (document.getElementById("filterTextBody").value.length == 0) {
+      SolaceWebUtility.ui.clearMessageFilter();
+    } else {
+      document.getElementById("filterMsgList").innerHTML = SolaceWebUtility.ui.svg.filterActive;
+      for (let msgId of Object.keys(SolaceWebUtility.clientSession.queuedMessages)) {
+        let msg = SolaceWebUtility.clientSession.queuedMessages[msgId];
+        if (SolaceWebUtility.ui.filterMatch(msgId)) {
+          document.getElementById(msg.SWU.domId).classList.remove("hidden");
+        } else {
+          document.getElementById(msg.SWU.domId).classList.add("hidden");
+          document.getElementById("msgRowCheckBox-" + msgId).checked = false;
+        }
+      }
+      SolaceWebUtility.ui.updateDisplayCount();
+      if (document.getElementById("msgDisplayCount").textContent != "0")
+        SolaceWebUtility.ui.toggleMessageFilter();
+    }
+  },
+  
+  filterMatch: function(msgId) {
+    return SolaceWebUtility.clientSession.queuedMessages[msgId].SWU.isText && new RegExp(document.getElementById("filterTextBody").value).test(SolaceWebUtility.clientSession.queuedMessages[msgId].SWU.content);
   },
   
   /*
@@ -1349,7 +1389,7 @@ SolaceWebUtility.ui = {
   toggleCheckboxes: function(headerCheckbox) {
     const tableBody = headerCheckbox.getAttribute("msg-table-target");
     if (document.getElementById(tableBody) != null) {
-      let checkboxes = document.getElementById(tableBody).getElementsByClassName("message-row-checkbox");
+      let checkboxes = document.querySelectorAll("#messageListBody tr.message-row:not(.hidden) input.message-row-checkbox");
       for (let dom of checkboxes) {
         if (dom instanceof HTMLInputElement && dom.getAttribute("type").toLowerCase() == "checkbox") {
           dom.checked = headerCheckbox.checked;
@@ -1368,7 +1408,7 @@ SolaceWebUtility.ui = {
 
   // function to update message display count in ui
   updateDisplayCount: function() {
-    document.getElementById("msgDisplayCount").textContent = document.querySelectorAll("#messageListBody tr.message-row").length;
+    document.getElementById("msgDisplayCount").textContent = document.querySelectorAll("#messageListBody tr.message-row:not(.hidden)").length;
   },
   
   // function to update selected message count in ui
@@ -1602,7 +1642,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   // added web app info
   document.getElementById("suwInfo").innerHTML = `Solace Web Utility v${SolaceWebUtility.version}` + ((SolaceWebUtility.isHosted) ? "" : "<br>(Local Mode)");
-  document.getElementById("suwInfo").classList.add("pointer");
   document.getElementById("suwInfo").onclick = function() {
     window.location = "https://github.com/SolacePSGSolutions/solace-queue-browser";
   };
@@ -1654,7 +1693,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       </ul>
     </nav>
     <!-- SOLACE WEB UTILITY INFO -->
-    <div id="suwInfo" class=" section-padding log-style sticky-bottom"></div>
+    <div id="suwInfo" class="section-padding log-style sticky-bottom pointer"></div>
   </aside>
   
   <!-- MAIN BODY -->
@@ -1729,6 +1768,11 @@ window.addEventListener('DOMContentLoaded', async () => {
           </svg>
         </div>
       </header>
+      <header class="hidden bg-trans-gray" id="filterMessageForm">
+        Message Body: <input type="text" id="filterTextBody">
+        <button id="msgFilterSet">Filter</button>
+        <button id="msgFilterClear">Clear</button>
+      </header>
       <!-- Message ID, Spooled Time, Size -->
       <table class="message-list-table">
         <thead>
@@ -1761,7 +1805,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         <div class="log-style norm-font std-height border tab-body flex-item hidden" id="msgTabBodyRaw"></div>
       </div>
     </section>
-    
   </main>
+  <div class="hidden form-popup-container">
+    <form id="messageFilterForm">
+    </form>
+  </div>
 </body>
 </html>
