@@ -1032,13 +1032,25 @@ SolaceWebUtility.ui = {
     document.getElementById("deleteSelectedMsgs").onclick = function() { SolaceWebUtility.ui.confirmBulkDelMsges(); };
     
     // add actions to message filter buttons
-    document.getElementById("msgFilterSet").onclick = function() { SolaceWebUtility.ui.setMessageFilter(); };
-    document.getElementById("msgFilterClear").onclick = function() { SolaceWebUtility.ui.clearMessageFilter(); };
+    document.getElementById("msgFilterSet").onclick = function() {
+      SolaceWebUtility.ui.setMessageFilter();
+    };
+    document.getElementById("msgFilterClear").onclick = function() {
+      SolaceWebUtility.ui.clearMessageFilter();
+      SolaceWebUtility.ui.showPopup("Filter Cleared", 1000, "info");
+    };
     
     // add "enter" for message filter text box
     document.getElementById("filterTextBody").addEventListener("keydown", function(event) {
-        if (event.key === 'Enter')
-          SolaceWebUtility.ui.setMessageFilter();
+        if (event.key === 'Enter') {
+          if (document.getElementById("filterTextBody").value.length == 0) {
+            SolaceWebUtility.ui.clearMessageFilter();
+            SolaceWebUtility.ui.showPopup("Filter Cleared", 1000, "info");
+          } else {
+            SolaceWebUtility.ui.setMessageFilter();
+            SolaceWebUtility.ui.showPopup("Filter Applied", 1000, "info");
+          }
+        }
       });
     
     // add action to header checkbox
@@ -1390,23 +1402,19 @@ SolaceWebUtility.ui = {
   
   // UI: set message filter active. filtering is referencing queuedMessages. TODO review if this should be in another namespace (or at least part of the function broken into different namespaces).
   setMessageFilter: function() {
-    if (document.getElementById("filterTextBody").value.length == 0) {
-      SolaceWebUtility.ui.clearMessageFilter();
-    } else {
-      document.getElementById("filterMsgList").innerHTML = SolaceWebUtility.ui.svg.filterActive;
-      for (let msgId of Object.keys(SolaceWebUtility.clientSession.queuedMessages)) {
-        let msg = SolaceWebUtility.clientSession.queuedMessages[msgId];
-        if (SolaceWebUtility.ui.filterMatch(msgId)) {
-          document.getElementById(msg.SWU.domId).classList.remove("hidden");
-        } else {
-          document.getElementById(msg.SWU.domId).classList.add("hidden");
-          document.getElementById("msgRowCheckBox-" + msgId).checked = false;
-        }
+    document.getElementById("filterMsgList").innerHTML = SolaceWebUtility.ui.svg.filterActive;
+    for (let msgId of Object.keys(SolaceWebUtility.clientSession.queuedMessages)) {
+      let msg = SolaceWebUtility.clientSession.queuedMessages[msgId];
+      if (SolaceWebUtility.ui.filterMatch(msgId)) {
+        document.getElementById(msg.SWU.domId).classList.remove("hidden");
+      } else {
+        document.getElementById(msg.SWU.domId).classList.add("hidden");
+        document.getElementById("msgRowCheckBox-" + msgId).checked = false;
       }
-      SolaceWebUtility.ui.updateDisplayCount();
-      if (document.getElementById("msgDisplayCount").textContent != "0")
-        SolaceWebUtility.ui.toggleMessageFilter();
     }
+    SolaceWebUtility.ui.updateDisplayCount();
+    if (document.getElementById("msgDisplayCount").textContent != "0")
+      SolaceWebUtility.ui.toggleMessageFilter();
   },
   
   // UI: function to boolean results whether the message matches the filter TODO review along with setMessageFilter() if this should be in this namespace.

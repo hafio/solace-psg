@@ -1,9 +1,12 @@
-# Solace Queue Browser
+# Solace Queue Browser Web Utility
 
 ## Overview
 
+> [!TIP]
+> Enterprise support is available through Solace Professional Services. Talk to your Solace consultant or sales contact to find out more!
+
 > [!IMPORTANT]
-> This is an open-source non-production tool that is not officially supported under Solace Customer Support policy.
+> This is an open-source tool that is not officially supported under Solace Customer Support policy.
 
 The application is intended to be able to run **without a backend application (e.g. web server)**.
 
@@ -19,6 +22,8 @@ Users are expected to know the connection parameters / details.
    - Edge 137+
    - Chrome 137+
    - Firefox 137+
+   - Chromium 137+
+   - Thorium 130+
 2. Solace Javascript API (Browser) v10.18.2
 
 ## Installation / Running the App
