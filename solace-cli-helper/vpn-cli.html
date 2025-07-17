@@ -1,0 +1,252 @@
+<html>
+<head>
+<style>
+* {
+	box-sizing: border-box;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+button.button {
+    margin: 5px;
+    padding: 3px 10px;
+}
+div {
+    margin: 5px;
+    padding: 3px 10px;
+}
+a.highlight {
+    background-color: yellow;
+    padding: 3px 6px;
+}
+div.mono {
+    font-family: monospace;
+    font-size: 1em;
+    white-space: pre-wrap;
+}
+div.bold {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+div.border {
+    border-color: #444;
+    border-style: solid;
+    border-width: 1px;
+}
+ul.navi {
+    display: block;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+}
+ul.navi li {
+    color: #333;
+    background-color: white;
+    text-decoration: none;
+    cursor: pointer;
+    border-color: #888;
+    border-style: solid;
+    border-width: 1px;
+    list-style: none;
+    margin: 3px;
+    padding: 5px 10px;
+}
+div.output {
+    overflow: auto;
+    flex-grow: 1;
+}
+</style>
+<script>
+
+function resizeOutputDiv() {
+    el = document.getElementById("clioutput");
+    topOffset = el.offsetTop;
+    el.style.height = `calc(100vh - ${topOffset}px - 15px)`;
+}
+function checkCliExitBlock(lineNum, spaces = 2) {
+  return (lines[lineNum] != " ".repeat(spaces)+"exit" && lineNum < lines.length)
+}
+function cleanArr(text) {
+  return text.replaceAll('"','').trim().split(/\s+/);
+}
+function processGlobalDefaultAccess(lineNum) {
+  let level = 1, glob = def = null, accessEx = {};
+  while (level != 0 && typeof lines[lineNum] !== 'undefined') {
+    _TMP = cleanArr(lines[lineNum]);
+    switch (_TMP[0]) {
+      case "global-access-level":
+        glob = _TMP[1];
+        break;
+      case "message-vpn":
+        level++;
+        break;
+      case "default-access-level":
+        def = _TMP[1];
+        break;
+      case "create":
+        if (_TMP[1] == "access-level-exception") {
+          vpnName = _TMP[2];
+          level++;
+        }
+      case "access-level":
+        accessEx[vpnName] = _TMP[1];
+      case "exit":
+        level--;
+        break;
+    }
+    lineNum++;
+  }
+  return { 
+    lineNum: --lineNum,
+    obj: { globalAccess: glob, defaultAccess: def, accessException: accessEx, }
+  };
+}
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      console.log('Text copied to clipboard successfully!');
+    })
+    .catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+}
+function escapeHTML(text) {
+    textDom = document.createElement("div");
+    textDom.textContent = text;
+    return textDom.innerHTML;
+}
+
+
+async function processCLI(input) {
+  data = await input.files[0].text();
+  markedSection = {}, replicationOutput = "home\nenable\nconfigure\n", vpnName = "";
+  cliOut = document.getElementById("clioutput");
+  //data = document.getElementById('clitext').value;
+  lines = data.split(/\r?\n/), ln=-1;
+  while (++ln < lines.length) {
+    let _TMP = cleanArr(lines[ln]);
+    if (/^! Create Message Vpn: "/.test(lines[ln]) && typeof markedSection.vpnDetails === 'undefined') {
+// HIGHLIGHT
+      vpnName = _TMP[4];
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"vpnDetails\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.vpnDetails = true;
+    } else if (/^! Create Client Profile: /.test(lines[ln]) && typeof markedSection.clientProfile === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"clientProfile\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.clientProfile = true;
+    } else if (/^! Create Message Spool: "/.test(lines[ln]) && typeof markedSection.msgSpool === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"msgSpool\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.msgSpool = true;
+    } else if (/^! Create Endpoints: "/.test(lines[ln]) && typeof markedSection.endpoints === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"endPts\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.endpoints = true;
+    } else if (/^! Create ACL Profile: "/.test(lines[ln]) && typeof markedSection.aclProfile === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"aclProfile\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.aclProfile = true;
+    } else if (/^! Create Client Username: "/.test(lines[ln]) && typeof markedSection.clientUsername === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"aclProfile\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.clientUsername = true;
+    } else if (/^! Create Bridge: "/.test(lines[ln]) && typeof markedSection.bridge === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"aclProfile\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.bridge = true;
+    } else if (/^! Create JNDI: "/.test(lines[ln]) && typeof markedSection.bridge === 'undefined') {
+      cliOut.innerHTML += "<a class=\"highlight\" name=\"jndi\">" + escapeHTML(lines[ln]) + "</a>\n";
+      markedSection.jndi = true;
+    } else if (/^  replication$/.test(lines[ln])) {
+// REPLICATION      
+      replicationOutput += `message-vpn ` + escapeHTML(vpnName) + "\n";
+      replicationOutput += escapeHTML(lines[ln]) + "\n";
+      while (checkCliExitBlock(++ln, 4)) {
+        replicationOutput += escapeHTML(lines[ln]) + "\n";
+      }
+      replicationOutput += "    exit\n  exit\n";
+    } else if (/^create bridge/.test(lines[ln])) {
+// SHUTDOWN BRIDGES
+      while (checkCliExitBlock(++ln, 2)) {
+        if (lines[ln] == "      no shutdown")
+          cliOut.innerHTML += "      shutdown\n";
+        else if (lines[ln] == "  no shutdown")
+          cliOut.innerHTML += "  shutdown\n";
+        else
+          cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+      }
+    } else if (/^client-username "default" message-vpn/.test(lines[ln])) {
+// ADD SHUTDOWN LINE DEFAULT CLIENT USERNAME
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+      cliOut.innerHTML += "  shutdown\n";
+    } else if (/^  service rest .+ listen-port [0-9]+ ssl$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: REST * SSL
+      cliOut.innerHTML += `  service rest ${_TMP[2]} ssl shutdown\n`;
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    } else if (/^  service rest .+ listen-port [0-9]+$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: REST *
+      cliOut.innerHTML += `  service rest ${_TMP[2]} plain-text shutdown\n`;
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    } else if (/^  service .+ listen-port [0-9]+ ssl$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
+      cliOut.innerHTML += `  service ${_TMP[1]} ssl shutdown\n`;
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    } else if (/^  service .+ listen-port [0-9]+$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
+      cliOut.innerHTML += `  service ${_TMP[1]} plain-text shutdown\n`;
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    } else if (/^  service mqtt listen-port [0-9]+ (ssl )?web$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: MQTT * SSL? WEB
+      protocol = (_TMP[4] == "ssl") ? "websocket-secure" : "websocket";
+      cliOut.innerHTML += `  service mqtt ${protocol} shutdown\n`;
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    } else {
+      cliOut.innerHTML += escapeHTML(lines[ln]) + "\n";
+    }
+  }
+  butDom = document.getElementById("buttons");
+  butDom.innerHTML = "";
+  
+  but = document.createElement("button")
+  but.classList.add("button");
+  but.textContent = "Show Processed Output";
+  procOutput = document.getElementById("clioutput").innerHTML;
+  but.onclick = function() { document.getElementById("clioutput").innerHTML = procOutput; };
+  butDom.appendChild(but);
+  
+  but = document.createElement("button")
+  but.classList.add("button");
+  but.textContent = "Show Replication Output";
+  but.onclick = function() { document.getElementById("clioutput").innerHTML = replicationOutput; };
+  butDom.appendChild(but);
+}
+</script>
+</head>
+<body>
+<input id="cli" type="file" onChange="processCLI(this)"/>
+<div class="mono bold" style="width: calc(100% - 150px)">
+This scripts is meant to process <code>show current-config message-vpn *</code> outputs to allow you to run it again (usually in context of migration). It does the following:
+    - Provision all VPN bridges in "shutdown" state
+    - Removes all "replication" configuration
+    - Adds a shutdown line for "default" username to allow changes
+    - Adds shutdown lines for service listen-port to allow changes
+    
+
+</div>
+<span>
+    <button class="button" onclick="copyToClipboard(document.getElementById('clioutput').textContent)">Copy Output</button>
+    <span id="buttons"></span>
+</span>
+<div class="mono border output" id="clioutput"></div>
+<ul class="navi">
+<li onclick="window.location='#vpnDetails'">Message VPN</li>
+<li onclick="window.location='#clientProfile'">Client Profile</li>
+<li onclick="window.location='#msgSpool'">Message Spool</li>
+<li onclick="window.location='#endPts'">Endpoints</li>
+<li onclick="window.location='#aclProfile'">ACL Profile</li>
+<li onclick="window.location='#clientUsername'">Client Username</li>
+<li onclick="window.location='#bridge'">Bridge</li>
+<li onclick="window.location='#jndi'">JNDI</li>
+</ul>
+<script>
+window.addEventListener('load', resizeOutputDiv);
+window.addEventListener('resize', resizeOutputDiv);
+//document.body.onload = function() { processCLI(document.getElementById('cli')); };
+</script>
+</body>
+</html>
