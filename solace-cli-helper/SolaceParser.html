@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <!--script>
+      let data = lines = null;
+    </script-->
+    <script src="func.js"></script>
+    <script src="parseCurrentConfig.js"></script>
+    <script src="parseClients.js"></script>
+    <script src="parseGatherDiag.js"></script>
+    <script src="parseBrokerJsonAndDisplay.js"></script>
+  </head>
+  <body>
+    <div class="navi no-print">
+      This utility parses the Solace CLI output of <code>show current-config all</code> and <code> show client * detail</code>, and the <code>cli-diagnostics.txt</code> of <code>gather-diagnostics</code>, .
+      <p>
+        show current config all:
+        <input id="currentConfigFile" lineTarget="currentConfigLines" type="file" onchange="prepFile(this, 'configCliData')" /><br />
+        <span class="lines" id="currentConfigLines"></span><br />
+        <span class="lines" id="currentConfigLinesProcessed"></span>
+      </p>
+      <p>
+        show client * detail:
+        <input id="clientDetailFile" lineTarget="clientDetailLines" type="file" onchange="prepFile(this, 'clientDetailData')" /><br />
+        <span class="lines" id="clientDetailLines"></span><br />
+        <span class="lines" id="clientDetailLinesProcessed"></span>
+      </p>
+      <p>
+        gather-diagnostics:
+        <input id="gatherDiagFile" lineTarget="gatherDiagLines" type="file" onchange="prepFile(this, 'gatherDiagData')" /><br />
+        <span class="lines" id="gatherDiagLines"></span><br />
+        <span class="lines" id="gatherDiagLinesProcessed"></span>
+      </p>
+      <p>
+        <button onClick="processFiles()">Process Files</button>
+        <button onClick="jsonCopy()">Copy Broker JSON to Clipboard</button>
+      </p>
+      <p><hr /></p>
+      <ul>
+        <li><a href="#issues">Issues</a></li>
+        <li><a href="#brokerSummary">Broker Summary</a></li>
+        <li><a href="#vpnSummary">VPN Summary</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnGeneral">.General</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnReplication">.Replication</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnCountSummary">.Count Summary</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnLimits">.Limits</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnACLSummary">.ACL Summary</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnCPSummary">.CP Summary</a></li>
+        <li class="not-bold left-margin-10"><a href="#vpnCUSummary">.CU Summary</a></li>
+      </ul>
+      <ul id="naviMenu"></ul>
+    </div>
+    <div class="main" id="mainPanel"></div>
+  <!--script src="json.js" defer></script-->
+  </body>
+</html>

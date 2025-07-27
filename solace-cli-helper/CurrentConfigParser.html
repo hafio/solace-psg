@@ -1,0 +1,243 @@
+<html>
+<head>
+<style>
+* {
+	box-sizing: border-box;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+button.button {
+    margin: 5px;
+    padding: 3px 10px;
+}
+div {
+    margin: 5px;
+    padding: 3px 10px;
+}
+a.highlight {
+    background-color: yellow;
+    padding: 3px 6px;
+}
+div.mono {
+    font-family: monospace;
+    font-size: 1em;
+    white-space: pre-wrap;
+}
+code {
+  color: #00AB91;
+}
+div.bold {
+    font-size: 1em;
+    font-weight: bold;
+}
+div.border {
+    border-color: #444;
+    border-style: solid;
+    border-width: 1px;
+}
+div.pre {
+  white-space: pre-wrap;
+}
+ul.navi {
+    display: block;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+}
+ul.navi li {
+    color: #333;
+    background-color: white;
+    text-decoration: none;
+    cursor: pointer;
+    border-color: #888;
+    border-style: solid;
+    border-width: 1px;
+    list-style: none;
+    margin: 3px;
+    padding: 5px 10px;
+}
+div.output {
+    overflow: auto;
+    flex-grow: 1;
+}
+</style>
+<script src="func.js"></script>
+<script>
+let output = { cli: {}, vpn: {}, };
+function resizeOutputDiv() {
+    el = document.getElementById("clioutput");
+    topOffset = el.offsetTop;
+    el.style.height = `calc(100vh - ${topOffset}px - 15px)`;
+}
+function sendToOutput(type, subType, text) {
+  if (typeof output[type][subType] === 'undefined')
+    output[type][subType] = "home\nenable\nconfigure\n\n";
+  output[type][subType] += text;
+}
+async function tweakCurrentConfigCLI(input) {
+  data = await input.files[0].text();
+  output = { cli: {}, vpn: {}, }, markedSection = {}, vpnName = "";
+  let outputType = "system";
+  //data = document.getElementById('clitext').value;
+  lines = data.split(/\r?\n/), ln=-1;
+  while (++ln < lines.length) {
+    let _TMP = cleanArr(lines[ln]);
+// REDUNDANCY
+    if (lines[ln] == "! Configure Redundancy") {
+      while (lines[++ln] != "") {
+        sendToOutput("cli", "redundancy", lines[ln] + "\n");
+      }
+// BROKER REPLICATION
+    } else if (lines[ln] == "! Configure Replication") {
+      while (lines[++ln] != "") {
+        sendToOutput("cli", "replication", lines[ln] + "\n");
+      }
+// SYSTEM AUTHENTICATION & AUTHORIZATION
+    } else if (/^! Create Usernames:/.test(lines[ln])) {
+      outputType = 'auth';
+// ADMIN PASSWORD
+    } else if (/^create username "admin" /.test(lines[ln])) {
+      sendToOutput("cli", "admin", "username admin\n");
+      while (checkCliExitBlock(lines, ++ln, 2))
+        sendToOutput("cli", "admin", lines[ln] + "\n");
+//
+// VPN SECTION
+//
+    } else if (/^! Just Create Message Vpn/.test(lines[ln])) {
+      outputType = "vpn", markedSection = {}, vpnName = _TMP[5];
+      sendToOutput(outputType, vpnName, lines[ln] + "\n");
+    } else if (/^create client-profile .+ message-vpn /.test(lines[ln])) {
+      outputType = "vpn", markedSection = {}, vpnName = _TMP[4];
+      sendToOutput(outputType, vpnName, lines[ln] + "\n");
+    } else if (/^! Create Message Vpn: "/.test(lines[ln])) {
+// HIGHLIGHT
+      outputType = "vpn", markedSection = {}, vpnName = _TMP[4];
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"vpnDetails\">" + escapeHTML(lines[ln]) + "</a>\n");
+    } else if (/^! Create Client Profile: /.test(lines[ln]) && typeof markedSection.clientProfile === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"clientProfile\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.clientProfile = true;
+    } else if (/^! Create Message Spool: "/.test(lines[ln]) && typeof markedSection.msgSpool === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"msgSpool\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.msgSpool = true;
+    } else if (/^! Create Endpoints: "/.test(lines[ln]) && typeof markedSection.endpoints === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"endPts\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.endpoints = true;
+    } else if (/^! Create ACL Profile: "/.test(lines[ln]) && typeof markedSection.aclProfile === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"aclProfile\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.aclProfile = true;
+    } else if (/^! Create Client Username: "/.test(lines[ln]) && typeof markedSection.clientUsername === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"clientUsername\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.clientUsername = true;
+    } else if (/^! Create Bridge: "/.test(lines[ln]) && typeof markedSection.bridge === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"bridge\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.bridge = true;
+    } else if (/^! Create JNDI\: "/.test(lines[ln]) && typeof markedSection.jndi === 'undefined') {
+      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"jndi\">" + escapeHTML(lines[ln]) + "</a>\n");
+      markedSection.jndi = true;
+    } else if (/^  replication$/.test(lines[ln])) {
+// Message VPN REPLICATION
+      sendToOutput("cli", "replication", `message-vpn ` + escapeHTML(vpnName) + "\n");
+      sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+      while (checkCliExitBlock(lines, ++ln, 4)) {
+        sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+      }
+      sendToOutput("cli", "replication", "    exit\n  exit\n");
+    } else if (/^create bridge/.test(lines[ln])) {
+// SHUTDOWN BRIDGES
+      while (checkCliExitBlock(lines, ++ln, 2)) {
+        if (lines[ln] == "      no shutdown")
+          sendToOutput(outputType, vpnName, "      shutdown\n");
+        else if (lines[ln] == "  no shutdown")
+          sendToOutput(outputType, vpnName, "  shutdown\n");
+        else
+          sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+      }
+    } else if (/^client-username "default" message-vpn/.test(lines[ln])) {
+// ADD SHUTDOWN LINE DEFAULT CLIENT USERNAME
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+      sendToOutput(outputType, vpnName, "  shutdown\n");
+    } else if (/^  (no )?service rest .+ listen-port( [0-9]+)? ssl$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: REST * SSL
+      sendToOutput(outputType, vpnName, `  service rest ${_TMP[2]} ssl shutdown\n`);
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    } else if (/^  (no )?service rest .+ listen-port( [0-9]+)?$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: REST *
+      sendToOutput(outputType, vpnName, `  service rest ${_TMP[2]} plain-text shutdown\n`);
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    } else if (/^  (no )?service .+ listen-port( [0-9]+)? ssl$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
+      sendToOutput(outputType, vpnName, `  service ${_TMP[1]} ssl shutdown\n`);
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    } else if (/^  (no )?service .+ listen-port( [0-9]+)?$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
+      sendToOutput(outputType, vpnName, `  service ${_TMP[1]} plain-text shutdown\n`);
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    } else if (/^  (no )?service mqtt listen-port( [0-9]+)? (ssl )?web$/.test(lines[ln])) {
+// ADD SHUTDOWN LINE FOR LISTEN-PORT: MQTT * SSL? WEB
+      protocol = (_TMP[4] == "ssl") ? "websocket-secure" : "websocket";
+      sendToOutput(outputType, vpnName, `  service mqtt ${protocol} shutdown\n`);
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    } else if (outputType == "vpn")
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    else 
+      sendToOutput("cli", outputType, escapeHTML(lines[ln]) + "\n");
+  }
+  document.getElementById("buttons").innerHTML = "";
+  document.getElementById("clioutput").innerHTML = "";
+  for (let section in output.cli) {
+    let btn = document.createElement("button")
+    btn.classList.add("button");
+    btn.textContent = "Show '" + capitalizeWord(section) + "' CLI";
+    btn.onclick = () => { document.getElementById("clioutput").innerHTML = output.cli[section]; document.getElementById("naviMenu").style.display = "none"; };
+    addToBodyOrDom(btn, "buttons");
+  }
+  for (let section in output.vpn) {
+    let btn = document.createElement("button")
+    btn.classList.add("button");
+    btn.textContent = "Show VPN '" + capitalizeWord(section) + "' CLI";
+    btn.onclick = () => { document.getElementById("clioutput").innerHTML = output.vpn[section]; document.getElementById("naviMenu").style.display = "block"; };
+    addToBodyOrDom(btn, "buttons");
+  }
+  resizeOutputDiv();
+}
+</script>
+</head>
+<body>
+<input id="cli" type="file" onChange="tweakCurrentConfigCLI(this)"/>
+<div class="bold pre" style="width: calc(100% - 150px)">
+This scripts is meant to process <code>show current-config all|message-vpn *</code> outputs to allow you to run it again (usually in context of migration). It does the following:
+    - Separates System (e.g. system, scaling, interface, hardware, broker wide services) configuration
+    - Separates Broker wide username, authentication, and authorization configuration
+    - Separates each message vpn's configuration
+      - highlights sections (VPN, Client Profile, Message Spool, Endpoints, ACL Profile, Client Username, Bridge, and JNDI)
+    - Separates "redundancy" configuration
+    - Separates broker & message vpn "replication" configuration
+    - Changes all VPN bridges to be provisioned in "shutdown" state
+    - Adds a shutdown line for "default" username in each vpn to allow changes
+    - Adds shutdown lines for service listen-port to allow changes
+    
+
+</div>
+<span>
+    <button class="button" onclick="copyToClipboard(document.getElementById('clioutput').textContent)">Copy Output</button>
+    <span id="buttons"></span>
+</span>
+<div class="mono border output" id="clioutput"></div>
+<ul id="naviMenu" class="navi" style="display:none">
+<li onclick="window.location='#vpnDetails'">Message VPN</li>
+<li onclick="window.location='#clientProfile'">Client Profile</li>
+<li onclick="window.location='#msgSpool'">Message Spool</li>
+<li onclick="window.location='#endPts'">Endpoints</li>
+<li onclick="window.location='#aclProfile'">ACL Profile</li>
+<li onclick="window.location='#clientUsername'">Client Username</li>
+<li onclick="window.location='#bridge'">Bridge</li>
+<li onclick="window.location='#jndi'">JNDI</li>
+</ul>
+<script>
+window.addEventListener('load', resizeOutputDiv);
+window.addEventListener('resize', resizeOutputDiv);
+</script>
+</body>
+</html>
