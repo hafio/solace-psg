@@ -158,6 +158,7 @@ function fillTableTd(tableOrDom) {
 
 function initializeMainPanel() {
   document.getElementById("mainPanel").innerHTML = `
+      <div style="height:70px"></div>
       <a name="issues"><h1>Issues</h1></a>
       <div id="problems" class="scrolling">
         <button onclick="copyTable(document.getElementById('problemListTable'))">Copy Table</button>
