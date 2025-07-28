@@ -870,17 +870,19 @@ function processCLI(lines, broker = {}) {
           if (_TMP[0] == "acl-profile") {
             broker.vpn[vpnName].clientUsername[usrName].aclProfile = _TMP[1];
             // add to acl profile
-            if (!broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.includes(usrName))
+            if (!_TMP[1].startsWith("#") && !broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.includes(usrName))
                 broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.push(usrName);
           } else if (_TMP[0] == "client-profile") {
             broker.vpn[vpnName].clientUsername[usrName].clientProfile = _TMP[1];
             // add to client profile
-            if (!broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.includes(usrName))
+            if (!_TMP[1].startsWith("#")) {
+              if (!broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.includes(usrName))
                 broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.push(usrName);
             // add properties from client profile
-            broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile = broker.vpn[vpnName].clientProfile[_TMP[1]].perClientUsername.maxConnections;
+              broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile = broker.vpn[vpnName].clientProfile[_TMP[1]].perClientUsername.maxConnections;
             // add properties to cumulative
-            broker.vpn[vpnName].cumulativeMaxConnectionsFromClientUsername += broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile;
+              broker.vpn[vpnName].cumulativeMaxConnectionsFromClientUsername += broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile;
+            }
           } else if (_TMP[0] == "no" && _TMP[1] == "shutdown")
             broker.vpn[vpnName].clientUsername[usrName].enabled = true;
           else if (_TMP[0] == "shutdown")
