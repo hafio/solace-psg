@@ -40,7 +40,6 @@ function checkDateBeforeRange(date, year = 0, month = 0, day = 0) {
 function parseBrokerJsonAndDisplay(broker) {
   initializeMainPanel();
   document.getElementById("naviMenu").innerHTML = "";
-  clearAllTables();
   aclProfileList = [], clientProfileList = [], clientUsernameList = [], problems = [];
   // Summary
   aclList = [];
@@ -427,6 +426,7 @@ function parseBrokerJsonAndDisplay(broker) {
         ]);
     }
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+    addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
     
     // Client Profiles
@@ -491,6 +491,7 @@ function parseBrokerJsonAndDisplay(broker) {
         ]);
     }
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+    addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
 
     // Client Username
@@ -513,6 +514,8 @@ function parseBrokerJsonAndDisplay(broker) {
             broker.vpn[vpn].clientUsername[cu].clientProfile,
         ]);
     }
+    addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+    addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
     
     // queues
@@ -576,11 +579,13 @@ function parseBrokerJsonAndDisplay(broker) {
     if (tblDom.getElementsByTagName("tbody").length != 0) {
         addHeaderToDOM(`Queues:`, 2, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+        addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
     }
     if (subDom.getElementsByTagName("tbody").length != 0) {
         addHeaderToDOM(`Queue subscription issues:`, 3, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(subDom), "vpns");
+        addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(subDom, "vpns");
     }
     
@@ -627,6 +632,7 @@ function parseBrokerJsonAndDisplay(broker) {
     if (tblDom.getElementsByTagName("tbody").length != 0) {
         addHeaderToDOM(`Topic Endpoints:`, 2, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+        addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
     }
   }
