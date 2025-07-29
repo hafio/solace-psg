@@ -115,7 +115,7 @@ function copyTableBody(table) {
 function createTableBodyCountSpan(idOrDom) {
   bodyDom = returnTableBodyDom(idOrDom);
   let span = document.createElement("span");
-  span.classList.add("rowCount");
+  span.classList.add("row-count");
   span.textContent = bodyDom.children.length + " rows";
   return span;
 }
@@ -153,7 +153,7 @@ function initializeMainPanel() {
     <a name="issues"><h1>Issues</h1></a>
     <div id="problems" class="scrolling">
       <button onclick="copyTable(document.getElementById('problemListTable'))">Copy Table</button>
-      <span class="rowCount" id="problemListTableRows"></span>
+      <span class="row-count" id="problemListTableRows"></span>
       <table class="summary" id="problemListTable">
         <thead class="sticky"></thead>
       </table>
@@ -197,19 +197,19 @@ function initializeMainPanel() {
     </div>
     <div id="aclSummary">
       <a name="vpnACLSummary"><h2>ACL Profile Summary</h2></a>
-      <span class="rowCount" id="aclSummaryTableRows"></span>
+      <span class="row-count" id="aclSummaryTableRows"></span>
       <table class="summary" id="aclSummaryTable"></table>
     </div>
     
     <div id="cpSummary">
       <a name="vpnCPSummary"><h2>Client Profile Summary</h2></a>
-      <span class="rowCount" id="cpSummaryTableRows"></span>
+      <span class="row-count" id="cpSummaryTableRows"></span>
       <table class="summary" id="cpSummaryTable"></table>
     </div>
     
     <div id="cuSummary">
       <a name="vpnCUSummary"><h2>Client Username Summary</h2></a>
-      <span class="rowCount" id="cuSummaryTableRows"></span>
+      <span class="row-count" id="cuSummaryTableRows"></span>
       <table class="summary" id="cuSummaryTable"></table>
     </div>
     
