@@ -47,6 +47,9 @@ function parseBrokerJsonAndDisplay(broker) {
   cuList = [];
   vpnList = [];
   
+  document.getElementById("hostnamePanel").textContent = broker.hostname;
+  document.getElementById("hostnamePanel").classList.remove("no-display");
+  
   // broker Summary
   solPlatform = showOS = solCPU = solMem = "";
   if (hasProperty(broker, 'platform'))
