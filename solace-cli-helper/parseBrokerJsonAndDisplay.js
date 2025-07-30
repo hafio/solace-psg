@@ -74,13 +74,18 @@ function parseBrokerJsonAndDisplay(broker) {
     solCPU = broker.hardware.cpu.join(", ");
   if (hasProperty(broker, 'hardware.memory'))
     solMem = broker.hardware.memory
-  lunSize = "";
-  if (hasProperty(broker.msgSpool, 'diskArrayWwn') && hasProperty(broker.hardware.lun, broker.msgSpool.diskArrayWwn))
-    lunSize = broker.hardware.lun[broker.msgSpool.diskArrayWwn].size;
+  storHeader = "Storage Size", storSize = "";
+  if (hasProperty(broker.msgSpool, 'diskArrayWwn') && hasProperty(broker.hardware.lun, broker.msgSpool.diskArrayWwn)) {
+    storHeader = "LUN Size"
+    storSize = broker.hardware.lun[broker.msgSpool.diskArrayWwn].size;
+  } else if (hasProperty(broker.msgSpool, 'diskMount') && hasProperty(broker.hardware.diskMount, broker.msgSpool.diskMount)) {
+    storHeader = "Disk Size"
+    storSize = broker.hardware.diskMount[broker.msgSpool.diskMount].size;
+  }
   // generic
   // TODO LUN CAN BE MULTIPLE BY ADDRESS - NEED TO FIX PARSER AND DISPLAY
-  overwriteTableHeaders("brokerSummaryTableGen", ["Hostname", "Platform", "OS", "CPU", "Memory", "LUN Size", ]);
-  addRowToTable("brokerSummaryTableGen", [broker.hostname, solPlatform, showOS, solCPU, solMem, lunSize ]);
+  overwriteTableHeaders("brokerSummaryTableGen", ["Hostname", "Platform", "OS", "CPU", "Memory", storHeader, ]);
+  addRowToTable("brokerSummaryTableGen", [broker.hostname, solPlatform, showOS, solCPU, solMem, storSize ]);
   
   // blades
   chsPN = chsSrl = nabPN = adbPN = hbaPN = "";

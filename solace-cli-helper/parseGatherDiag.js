@@ -1,3 +1,7 @@
+const storageUnitMapping = {
+  Ki: "MB", Mi: "GB", Gi: "TB", Ti: "PB", Pi: "EB",
+  K: "Mb", M: "Gb", G: "Tb", T: "Pb", P: "Eb",
+}
 const operationalStatuses = {
   U: "Up", D: "Down", N: "NA",
   u: "Up", d: "Down", n: "NA",
@@ -170,6 +174,29 @@ function processGD(lines, broker = {}) {
             }
           }
           updateStatus(ln, lines.length, "gatherDiagLinesProcessed");
+          break;
+// STORAGE DEVICES FOR NON LUN (IE SOFTWARE)
+        case /^Storage Devices/.test(lines[ln]):
+          if (!hasProperty(broker.hardware, "diskMount"))
+            broker.hardware.diskMount = {};
+          let storage = size = units = null, contains = [];
+          while (lines[++ln] != "") {
+            _TMP = cleanArr(lines[ln]);
+            switch (true) {
+              case /contains\: /.test(lines[ln]):
+                if (_TMP[1] == "spool")
+                  broker.msgSpool.diskMount = storage;
+                contains.push(_TMP.splice(1).join(" "));
+                break;
+              default:
+                if (storage != null)
+                  broker.hardware.diskMount[storage] = { size: `${size} ${units}`, contains: contains };
+                contains = [], storage = _TMP[0], size = _TMP[1], units = storageUnitMapping[_TMP[2]];
+                break;
+            }
+          }
+          if (storage != null)
+            broker.hardware.diskMount[storage] = { size: `${size} ${units}`, contains: contains };
           break;
 // VRF MANAGEMENT
         case /^# CLI command: show ip vrf management$/.test(lines[ln]):
