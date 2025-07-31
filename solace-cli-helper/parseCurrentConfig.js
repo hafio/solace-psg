@@ -762,7 +762,9 @@ function processCLI(lines, broker = {}) {
               break;
       // QUEUES & TOPIC ENDPOINTS
             case "create":
-              endpointName = _TMP[2];
+              strSt = lines[ln].indexOf('"') + 1;
+              strEd = lines[ln].indexOf('"', strSt);
+              endpointName = lines[ln].substring(strSt, strEd);
               if (_TMP[1] == "topic-endpoint") {
                 endpointType =  "topicEndpoint";
                 broker.vpn[vpnName][endpointType][endpointName] = {};
@@ -792,7 +794,13 @@ function processCLI(lines, broker = {}) {
                     broker.vpn[vpnName].cumulativeMaxSpoolUsage += parseInt(_TMP[1]);
                     break;
                   case /^    (no )?topic/.test(lines[ln]):
-                    broker.vpn[vpnName][endpointType][endpointName].topic = (_TMP[0] == "no") ? "(none)" : _TMP[1];
+                    if (_TMP[0] == "no")
+                      broker.vpn[vpnName][endpointType][endpointName].topic = "(none)";
+                    else {
+                      strSt = lines[ln].indexOf('"') + 1;
+                      strEd = lines[ln].indexOf('"', strSt);
+                      broker.vpn[vpnName][endpointType][endpointName].topic = lines[ln].substring(strSt, strEd);
+                    }
                     break;
                   case /^    (no )?owner/.test(lines[ln]):
                     broker.vpn[vpnName][endpointType][endpointName].owner = (_TMP[0] == "no") ?  "(none)" : _TMP[1];
