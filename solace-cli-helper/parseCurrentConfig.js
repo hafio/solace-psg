@@ -821,7 +821,12 @@ function processCLI(lines, broker = {}) {
                     broker.vpn[vpnName][endpointType][endpointName].ingressEnabled = (_TMP[0] == "no") ? true : false;
                     break;
                   case /subscription topic/.test(lines[ln]):
-                    broker.vpn[vpnName][endpointType][endpointName].subscriptionTopic.push(_TMP[2]);
+                    strSt = lines[ln].indexOf('"') + 1;
+                    strEd = lines[ln].indexOf('"', strSt);
+                    //strLen = lines[ln].length - 24; // as spaces are valid in topic strings, this is to handle and simply take the line substr, minus "trailing external" as that indicates topic not created by CLI
+                    //if (_TMP[_TMP.length-1] == "external")
+                    //  strLen = strLen - 9; // " external" = 9 characters
+                    broker.vpn[vpnName][endpointType][endpointName].subscriptionTopic.push(lines[ln].substring(strSt, strEd));
                     break;
                 }
               }

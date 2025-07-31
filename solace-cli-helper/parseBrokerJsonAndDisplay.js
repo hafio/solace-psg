@@ -37,9 +37,11 @@ function checkDateBeforeRange(date, year = 0, month = 0, day = 0) {
   return (date < dt);
 }
 
-function parseBrokerJsonAndDisplay(broker) {
+async function parseBrokerJsonAndDisplay(broker) {
   initializeMainPanel();
+  await sleep(0);
   document.getElementById("naviMenu").innerHTML = "";
+  await sleep(0);
   aclProfileList = [], clientProfileList = [], clientUsernameList = [], problems = [];
   // Summary
   aclList = [];
@@ -47,7 +49,7 @@ function parseBrokerJsonAndDisplay(broker) {
   cuList = [];
   vpnList = [];
   
-  document.getElementById("hostnamePanel").textContent = broker.hostname;
+  document.getElementById("hostnamePanel").textContent = "Loading " + broker.hostname + "...";
   document.getElementById("hostnamePanel").classList.remove("no-display");
   
   // broker Summary
@@ -86,6 +88,7 @@ function parseBrokerJsonAndDisplay(broker) {
   // TODO LUN CAN BE MULTIPLE BY ADDRESS - NEED TO FIX PARSER AND DISPLAY
   overwriteTableHeaders("brokerSummaryTableGen", ["Hostname", "Platform", "OS", "CPU", "Memory", storHeader, ]);
   addRowToTable("brokerSummaryTableGen", [broker.hostname, solPlatform, showOS, solCPU, solMem, storSize ]);
+  await sleep(0);
   
   // blades
   chsPN = chsSrl = nabPN = adbPN = hbaPN = "";
@@ -102,6 +105,7 @@ function parseBrokerJsonAndDisplay(broker) {
   overwriteTableHeaders("brokerSummaryTableHw", ["Hostname", "Chassis Product #", "Chassis Serial", "NAB Model", "ADB Model", "HBA Model"]);
   // TODO NAB, ADB, HBA display only first number
   addRowToTable("brokerSummaryTableHw", [broker.hostname, chsPN, chsSrl, nabPN, adbPN, hbaPN]);
+  await sleep(0);
   
   // LAG/VRF & scaling
   vrfMgmtDetails = "";
@@ -381,6 +385,7 @@ function parseBrokerJsonAndDisplay(broker) {
         addHeaderToDOM(`Bridges:`, 2, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        await sleep(0);
     }
     
     // acl
@@ -436,6 +441,7 @@ function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    await sleep(0);
     
     // Client Profiles
     addHeaderToDOM(`Client Profiles:`, 2, "vpns");
@@ -501,6 +507,7 @@ function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    await sleep(0);
 
     // Client Username
     addHeaderToDOM(`Client Usernames:`, 2, "vpns");
@@ -525,6 +532,7 @@ function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    await sleep(0);
     
     // queues
     tblDom = document.createElement("table");
@@ -589,12 +597,14 @@ function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        await sleep(0);
     }
     if (subDom.getElementsByTagName("tbody").length != 0) {
         addHeaderToDOM(`Queue subscription issues:`, 3, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(subDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(subDom, "vpns");
+        await sleep(0);
     }
     
     // topic endpoint
@@ -642,6 +652,7 @@ function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        await sleep(0);
     }
   }
   
@@ -666,9 +677,12 @@ function parseBrokerJsonAndDisplay(broker) {
   }
   addToBodyOrDom(createCopyTableButtonDom(tblDom), "mainPanel");
   addToBodyOrDom(tblDom, "mainPanel");
+  await sleep(0);
 
   overwriteTableHeaders("problemListTable", ["Severity", "Area", "Description"]);
   for (problem of problems) {
     addRowToTable("problemListTable", problem);
   }
+  document.getElementById("hostnamePanel").textContent = "Loaded !";
+  setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);
 }

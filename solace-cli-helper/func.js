@@ -81,9 +81,9 @@ function addRowToTable(idOrDom, cellArr) {
 
 function addToBodyOrDom(element, parent = "mainPanel") {
   if (parent == "body")
-    document.body.appendChild(element);
+    setTimeout( () => { document.body.appendChild(element); }, 10);
   else
-    document.getElementById(parent).appendChild(element);
+    setTimeout( () => { document.getElementById(parent).appendChild(element); }, 10);
 }
 
 function copyTable(table) {
@@ -260,11 +260,17 @@ function returnTableBodyDom(idOrDom, createBody = true) {
   return bodyDom;
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function updateStatus(line, total, domId) {
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await sleep(0);
   line = parseInt(line) + 1;
   pct = Math.round(line / total * 100);
   document.getElementById(domId).innerHTML = `Processed ${pct}%`;
+  document.getElementById(domId).offsetWidth;
+  await sleep(0);
 }
 
 function updateTableCell(idOrDom, row, col, text, overwrite = true) {
@@ -314,12 +320,14 @@ async function processFiles() {
     svcs: { semp: {}, smf: {}, web: {}, rest: {}, mqtt: {}, amqp: {}, healthcheck: {}, },
     vpn: {},
     username: {},
+    execTime: [],
   }
   let client = [];
   document.getElementById("gatherDiagLinesProcessed").innerHTML = "";
   document.getElementById("clientDetailLinesProcessed").innerHTML = "";
   document.getElementById("currentConfigLinesProcessed").innerHTML = "";
   
+  broker.execStart = performance.now();
   if (document.getElementById("currentConfigFile").files.length > 0)
     broker = await processCLI(files.configCliData, broker);
   if (document.getElementById("clientDetailFile").files.length > 0)
@@ -346,6 +354,8 @@ function checkTopicString(topic) {
     err.push("Topic string ending includes tab/newline non-alphanumeric character");
   if (topic == ">")
     err.push("Topic should not be 'catch-all' and should follow a well-defined taxonomy");
+  if (/^\s+$/.test(topic))
+    err.push("Topic only contains whitespaces");
   return (err.length == 0) ? null : err;
 }
 
