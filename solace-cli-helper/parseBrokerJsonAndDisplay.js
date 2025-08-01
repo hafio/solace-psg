@@ -667,8 +667,10 @@ async function parseBrokerJsonAndDisplay(broker) {
   //for (problem of problems) {
   //  addRowToTable("problemListTable", problem);
   //}
+  broker.processed = true;
   document.getElementById("hostnamePanel").textContent = "Loaded !";
-  setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);
+  if (typeof broker.hostname !== 'undefined')
+    setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);
 }
 async function parseClientJsonAndDisplay(client) {
   //client detail list
@@ -687,6 +689,7 @@ async function parseClientJsonAndDisplay(client) {
     }
   }
   addToBodyOrDom(createCopyTableButtonDom(tblDom), "mainPanel");
+  addToBodyOrDom(createTableBodyCountSpan(tblDom), "mainPanel");
   addToBodyOrDom(tblDom, "mainPanel");
   await sleep(0);
 }

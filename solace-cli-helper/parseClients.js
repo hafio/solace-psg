@@ -1,12 +1,11 @@
 function processClients(lines, clients = {}) {
   ln = -1;
-  client = [], _TMP = clientName = null;
   while (++ln < lines.length) {
     // multi-layered looping - Client: as the bigger outer loop, and more switch within each client loop
     // detects Client: line to start client block
     if (lines[ln].startsWith("Client: ")) {
       _TMP = cleanArr(lines[ln]);
-      if (clientName != null) { // save previously populated client block
+      if (typeof clientName != 'undefined' && clientName != null) { // save previously populated client block
         if (!hasProperty(clients, client.solApi))
           clients[client.solApi] = {};
         if (!hasProperty(clients[client.solApi], client.softwareVersion))

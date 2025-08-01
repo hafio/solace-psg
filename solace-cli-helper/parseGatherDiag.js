@@ -163,10 +163,11 @@ function processGD(lines, broker = {}) {
 // SCALING
         case /^Scaling\:/.test(lines[ln]):
           while (lines[++ln] != "") {
+            console.log(lines[ln]);
             _TMP = cleanArr(lines[ln]);
             switch (true) {
               case /Max Connections\: /.test(lines[ln]):
-                broker.scaling.maxConnections = parseInt(_TMP[2]);
+                broker.scaling.maxConnections = parseInt(_TMP[_TMP.length-1]);
                 break;
               case /Max Queue Messages\: /.test(lines[ln]):
                 broker.scaling.maxQueueMsg = parseInt(_TMP[3]);

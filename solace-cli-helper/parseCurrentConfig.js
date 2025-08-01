@@ -3,7 +3,10 @@ function processCLI(lines, broker = {}) {
   while (++ln < lines.length) {
     let _TMP = cleanArr(lines[ln]);
     switch(true) {
-    
+// Commented Router Name, not part of actual configuration
+      case /^!   Router: /.test(lines[ln]):
+        broker._routerName = _TMP[2];
+        break;
 // INTERFACES
       case /^create interface .+$/.test(lines[ln]):
         broker.intf[_TMP[2]] = { type: _TMP[3], member: [] };
@@ -941,5 +944,7 @@ function processCLI(lines, broker = {}) {
     }
   }
   updateStatus(ln, lines.length, "currentConfigLinesProcessed");
+  if (typeof broker.hostname === 'undefined')
+    broker.hostname = broker._routerName;
   return broker;
 }

@@ -381,7 +381,7 @@ async function processFiles() {
     execTime: [],
     totalExecTime: 0,
   }
-  let client = [];
+  let client = {};
   document.getElementById("gatherDiagLinesProcessed").innerHTML = "";
   document.getElementById("clientDetailLinesProcessed").innerHTML = "";
   document.getElementById("currentConfigLinesProcessed").innerHTML = "";
@@ -427,7 +427,7 @@ function checkTopicString(topic) {
 }
 
 function cleanArr(text) {
-  return (text == "") ? [] : text.match(/"[^"]*"|\S+/g).map(s => s.replace(/^"|"$/g, ''));
+  return (text.trim() == "") ? [] : text.match(/"[^"]*"|\S+/g).map(s => s.replace(/^"|"$/g, ''));
   //return text.replaceAll('"','').trim().split(/\s+/);
 }
 
