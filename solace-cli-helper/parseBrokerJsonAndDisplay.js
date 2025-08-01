@@ -395,6 +395,7 @@ async function parseBrokerJsonAndDisplay(broker) {
         addHeaderToDOM(`Bridges:`, 2, "vpns");
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        addEmptyLastHeaderAnchor();
         await sleep(0);
     }
     
@@ -452,6 +453,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    addEmptyLastHeaderAnchor();
     await sleep(0);
     
     // Client Profiles
@@ -519,6 +521,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    addEmptyLastHeaderAnchor();
     await sleep(0);
 
     // Client Username
@@ -531,6 +534,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     addToBodyOrDom(createPopulateTableButtonDom(tblDom, broker.vpn[vpn]), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
+    addEmptyLastHeaderAnchor();
     await sleep(0);
     
     // queues
@@ -597,6 +601,7 @@ async function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        addEmptyLastHeaderAnchor();
         await sleep(0);
     }
     if (subDom.getElementsByTagName("tbody").length != 0) {
@@ -604,6 +609,7 @@ async function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(createCopyTableButtonDom(subDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(subDom, "vpns");
+        addEmptyLastHeaderAnchor();
         await sleep(0);
     }
     
@@ -653,6 +659,7 @@ async function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
         addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
         addToBodyOrDom(tblDom, "vpns");
+        addEmptyLastHeaderAnchor();
         await sleep(0);
     }
     addEventTime(`${vpn} VPN END`, broker);
@@ -691,5 +698,6 @@ async function parseClientJsonAndDisplay(client) {
   addToBodyOrDom(createCopyTableButtonDom(tblDom), "mainPanel");
   addToBodyOrDom(createTableBodyCountSpan(tblDom), "mainPanel");
   addToBodyOrDom(tblDom, "mainPanel");
+  addEmptyLastHeaderAnchor();
   await sleep(0);
 }

@@ -37,6 +37,10 @@ body {
   padding: 0px;
   height: 100vh;
 }
+.active-section {
+  color: var(--sol-mid-green) !important;
+  font-weight: bold !important;
+}
 .left-margin-10 {
   margin-left: 10px;
 }

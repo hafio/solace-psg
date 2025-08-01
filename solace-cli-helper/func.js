@@ -45,14 +45,19 @@ function jsonCopy() {
   let jsonString = JSON.stringify(brokerData);
   copyToClipboard(jsonString.replace(/\\/g, '\\\\'));
 }
-
+let lastUuid = lastParent = null;
 ///////////////////////
 // FRONT-END RELATED //
 ///////////////////////
+function addEmptyLastHeaderAnchor() {
+  anc = document.createElement("a");
+  anc.name = lastUuid, anc.textContent = (" ");
+  addToBodyOrDom(anc, lastParent);
+}
 function addHeaderToDOM(text, level = 3, parent = "mainPanel") {
   uuid = crypto.randomUUID();
-  anc = document.createElement("a");
-  anc.name = uuid
+  lastParent = parent, lastUuid = uuid, anc = document.createElement("a");
+  anc.name = uuid;
   header = document.createElement("h" + level);
   header.textContent = text;
   anc.appendChild(header);
@@ -196,15 +201,19 @@ function initializeMainPanel() {
       <a name="vpnSummary"><h1>VPN Summary</h1></a>
       
       <a name="vpnGeneral"><h2>General</h2></a>
+      <button onclick="copyTable(document.getElementById('vpnSummaryTable'))">Copy Table</button>
       <table class="summary" id="vpnSummaryTable"></table>
       
       <a name="vpnReplication"><h2>Replication</h2></a>
+      <button onclick="copyTable(document.getElementById('vpnSummaryReplTable'))">Copy Table</button>
       <table class="summary" id="vpnSummaryReplTable"></table>
       
       <a name="vpnCountSummary"><h2>Count Summary</h2></a>
+      <button onclick="copyTable(document.getElementById('vpnCountSummaryTable'))">Copy Table</button>
       <table class="summary" id="vpnCountSummaryTable"></table>
       
       <a name="vpnLimits"><h2>VPN Limits</h2></a>
+      <button onclick="copyTable(document.getElementById('vpnSummaryLimitsTable'))">Copy Table</button>
       <table class="summary" id="vpnSummaryLimitsTable"></table>
     </div>
     <div id="aclSummary">
@@ -403,7 +412,7 @@ async function processFiles() {
   addEventTime("CLIENT LIST START", broker);
   await parseClientJsonAndDisplay(client);
   addEventTime("END", broker);
-
+  addObserver();
 }
 
 ///////////////
@@ -510,4 +519,29 @@ function addEventTime(text, broker) {
   duration = parseFloat((nowTime - prevTime).toFixed(3));
   broker.execTime.push({ event: text, time: nowTime, duration: duration});
   broker.totalExecTime += duration;
+}
+
+function addObserver() {
+  const links = document.querySelectorAll("ul li a");
+  const sections = Array.from(links).map(link => document.querySelector(`a[name="` + link.getAttribute("href").substr(1) + `"]`));
+
+  const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(link => link.classList.remove("active-section"));
+          if (entry.target.name.length > 0) {
+            const activeLink = document.querySelector(`ul li a[href="#${entry.target.name}"]`);
+            if (activeLink) activeLink.classList.add("active-section");
+          }
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: "0px 0px -80% 0px", // Trigger earlier
+      threshold: 0.1
+    }
+  );
+  sections.forEach(section => {
+    if (section) observer.observe(section);
+  });
 }
