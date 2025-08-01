@@ -37,22 +37,21 @@ function checkDateBeforeRange(date, year = 0, month = 0, day = 0) {
   return (date < dt);
 }
 
+let allList = { acl: [], cp: [], cu: [], vpn: [], }
+
 async function parseBrokerJsonAndDisplay(broker) {
+  allList = { acl: [], cp: [], cu: [], vpn: [], }
   initializeMainPanel();
   await sleep(0);
   document.getElementById("naviMenu").innerHTML = "";
   await sleep(0);
   aclProfileList = [], clientProfileList = [], clientUsernameList = [], problems = [];
-  // Summary
-  aclList = [];
-  cpList = [];
-  cuList = [];
-  vpnList = [];
   
   document.getElementById("hostnamePanel").textContent = "Loading " + broker.hostname + "...";
   document.getElementById("hostnamePanel").classList.remove("no-display");
   
   // broker Summary
+  addEventTime("Broker Summary", broker);
   solPlatform = showOS = solCPU = solMem = "";
   if (hasProperty(broker, 'platform'))
     solPlatform = broker.platform;
@@ -84,6 +83,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     storHeader = "Disk Size"
     storSize = broker.hardware.diskMount[broker.msgSpool.diskMount].size;
   }
+  addEventTime("Broker Summary DOM", broker);
   // generic
   // TODO LUN CAN BE MULTIPLE BY ADDRESS - NEED TO FIX PARSER AND DISPLAY
   overwriteTableHeaders("brokerSummaryTableGen", ["Hostname", "Platform", "OS", "CPU", "Memory", storHeader, ]);
@@ -91,6 +91,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   await sleep(0);
   
   // blades
+  addEventTime("Broker Hardware Blade", broker);
   chsPN = chsSrl = nabPN = adbPN = hbaPN = "";
   if (hasProperty(broker, 'hardware.chassisProductNumber'))
     chsPN = broker.hardware.chassisProductNumber;
@@ -108,6 +109,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   await sleep(0);
   
   // LAG/VRF & scaling
+  addEventTime("Broker Hardware VRF Management", broker);
   vrfMgmtDetails = "";
   vrfMsgDetails = "";
   if (hasProperty(broker.intf, 'vrfMgmt')) {
@@ -125,6 +127,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     }
   } else
     vrfMgmt = "";
+  addEventTime("Broker Hardware VRF Message Backbone", broker);
   if (hasProperty(broker.intf, 'vrfMsg')) {
     if (Object.keys(broker.intf.vrfMsg).length > 0 && broker.intf.vrfMsgEnabled)
       vrfMsg = "Configured & Enabled";
@@ -140,6 +143,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     }
   } else
     vrfMsg = "";
+  addEventTime("Broker Message Spool Operational Status", broker);
   msgSpoolOpStatus = broker.msgSpool.operationalStatus;
   if (hasProperty(broker.redundancy, 'enabled')) {
     if (broker.redundancy.enabled && broker.redundancy.role == "Primary" && broker.msgSpool.operationalStatus != "AD-Active") {
@@ -158,6 +162,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   addRowToTable("brokerSummaryTableLag", [broker.hostname, vrfMgmtDetails, vrfMsgDetails]);
   
   //broker redundancy
+  addEventTime("Broker Redundancy", broker);
   if (broker.redundancy.enabled)
     rddc = "Enabled";
   else {
@@ -188,6 +193,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   
   // TODO ADD REPLICATION PSK
   //broker replication
+  addEventTime("Broker Replication", broker);
   if (!hasProperty(broker, 'replication.enabled'))
     datRep = "";
   else if (broker.replication.enabled)
@@ -219,13 +225,15 @@ async function parseBrokerJsonAndDisplay(broker) {
   
   // loop through each VPN to get the details
   for (vpn in broker.vpn) {
+    addEventTime(`${vpn} VPN START`, broker);
     let vpnAuth = vpnRepl = maxConn = maxSpool = maxEg = maxIng = maxEndpts = repSsl = repRejectMsg = null;
-    vpnList.push(vpn);
-    overwriteTableHeaders("aclSummaryTable", ["ACL Profile", ...vpnList]);
-    overwriteTableHeaders("cpSummaryTable", ["Client Profile", ...vpnList]);
-    overwriteTableHeaders("cuSummaryTable", ["Client Username", ...vpnList]);
+    allList.vpn.push(vpn);
+    overwriteTableHeaders("aclSummaryTable", ["ACL Profile", ...allList.vpn]);
+    overwriteTableHeaders("cpSummaryTable", ["Client Profile", ...allList.vpn]);
+    overwriteTableHeaders("cuSummaryTable", ["Client Username", ...allList.vpn]);
 
     // vpn summary
+    addEventTime("VPN SUMMARY", broker);
     if (!hasProperty(broker.vpn[vpn], 'authentication.basic.enabled'))
       vpnAuth = "";
     else if (!broker.vpn[vpn].authentication.basic.enabled)
@@ -304,6 +312,7 @@ async function parseBrokerJsonAndDisplay(broker) {
       (hasProperty(broker.vpn[vpn], 'topicEndpointCount')) ? broker.vpn[vpn].topicEndpointCount : "",
     ]);
     // vpn limits
+    addEventTime("VPN LIMITS", broker);
     maxConn = maxSpool = maxEg = maxIng = maxEndpts = "";
       // max connections
     if (!hasProperty(broker.vpn[vpn], 'maxConnections'))
@@ -360,6 +369,7 @@ async function parseBrokerJsonAndDisplay(broker) {
 
     // bridge
     // TODO add connect-order to table to show errors
+    addEventTime("VPN BRIDGE", broker);
     tblDom = document.createElement("table");
     overwriteTableHeaders(tblDom, ["Bridge", "Remote VPN", "State", "Auth Scheme", "User", "SSL"]);
     for (bridge in broker.vpn[vpn].bridge) {
@@ -389,17 +399,18 @@ async function parseBrokerJsonAndDisplay(broker) {
     }
     
     // acl
+    addEventTime("VPN ACL PROFILE", broker);
     addHeaderToDOM(`ACL Profiles:`, 2, "vpns");
     tblDom = document.createElement("table");
     overwriteTableHeaders(tblDom, ["ACL Profile", "Default Connect", "Connection Exception", "Default Publish", "Publish Exception", "Default Subscribe", "Subscribe Exception", "Mapped Clientusernames"]);
     for (acl in broker.vpn[vpn].aclProfile) {
         let defaultConnect = defaultPublish = defaultSubscribe = null;
         // add to acl summary table
-        if (!aclList.includes(acl)) {
-            aclList.push(acl);
-            addRowToTable("aclSummaryTable", [acl, ...Array(vpnList.indexOf(vpn)).fill(""), "&check;"]);
+        if (!allList.acl.includes(acl)) {
+            allList.acl.push(acl);
+            addRowToTable("aclSummaryTable", [acl, ...Array(allList.vpn.indexOf(vpn)).fill(""), "&check;"]);
         } else {
-            updateTableCell("aclSummaryTable", aclList.indexOf(acl), vpnList.indexOf(vpn)+1, "&check;");
+            updateTableCell("aclSummaryTable", allList.acl.indexOf(acl), allList.vpn.indexOf(vpn)+1, "&check;");
         }
         // add to acl individual tables
         connEx = broker.vpn[vpn].aclProfile[acl].clientConnectException.length;
@@ -444,17 +455,18 @@ async function parseBrokerJsonAndDisplay(broker) {
     await sleep(0);
     
     // Client Profiles
+    addEventTime("VPN CLIENT PROFILE", broker);
     addHeaderToDOM(`Client Profiles:`, 2, "vpns");
     tblDom = document.createElement("table");
     overwriteTableHeaders(tblDom, ["Client Profile", "Max Connections", "Max SMF Conn.", "Max Web Conn.", "Max Egress", "Max Ingress", "Max Transactions", "Max Message per Txn", "Mapped Clientusernames"]);
     for (cp in broker.vpn[vpn].clientProfile) {
         // add to cp summary table
         let maxConn = maxSmf = maxWeb = maxEg = maxIng = maxTxn = mappUser = null;
-        if (!cpList.includes(cp)) {
-            cpList.push(cp);
-            addRowToTable("cpSummaryTable", [cp, ...Array(vpnList.indexOf(vpn)).fill(""), "&check;"]);
+        if (!allList.cp.includes(cp)) {
+            allList.cp.push(cp);
+            addRowToTable("cpSummaryTable", [cp, ...Array(allList.vpn.indexOf(vpn)).fill(""), "&check;"]);
         } else {
-            updateTableCell("cpSummaryTable", cpList.indexOf(cp), vpnList.indexOf(vpn)+1, "&check;");
+            updateTableCell("cpSummaryTable", allList.cp.indexOf(cp), allList.vpn.indexOf(vpn)+1, "&check;");
         }
         if (broker.vpn[vpn].clientProfile[cp].perClientUsername.maxConnections >= 1000) {
             maxConn = "<span class=\"warn\">" + broker.vpn[vpn].clientProfile[cp].perClientUsername.maxConnections + "</span>";
@@ -510,31 +522,19 @@ async function parseBrokerJsonAndDisplay(broker) {
     await sleep(0);
 
     // Client Username
+    addEventTime("VPN CLIENT USERNAME", broker);
     addHeaderToDOM(`Client Usernames:`, 2, "vpns");
     tblDom = document.createElement("table");
+    tblDom.id = crypto.randomUUID();
     overwriteTableHeaders(tblDom, ["Client Username", "State", "ACL Profile", "Client Profile"]);
-    for (cu in broker.vpn[vpn].clientUsername) {
-        // add to cu summary table
-        if (!cuList.includes(cu)) {
-            cuList.push(cu);
-            addRowToTable("cuSummaryTable", [cu, ...Array(vpnList.indexOf(vpn)).fill(""), "&check;"]);
-        } else {
-            updateTableCell("cuSummaryTable", cuList.indexOf(cu), vpnList.indexOf(vpn)+1, "&check;");
-        }
-        // add to cu individual tables
-        addRowToTable(tblDom, [
-            cu,
-            (broker.vpn[vpn].clientUsername[cu].enabled) ? "Enabled" : "Disabled",
-            broker.vpn[vpn].clientUsername[cu].aclProfile,
-            broker.vpn[vpn].clientUsername[cu].clientProfile,
-        ]);
-    }
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+    addToBodyOrDom(createPopulateTableButtonDom(tblDom, broker.vpn[vpn]), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
     await sleep(0);
     
     // queues
+    addEventTime("VPN QUEUES", broker);
     tblDom = document.createElement("table");
     overwriteTableHeaders(tblDom, ["Queue", "Owner", "Permissions", "Egress", "Ingress", "Access Type", "Max Spool", "Max Bind"]);
     subDom = document.createElement("table");
@@ -608,6 +608,7 @@ async function parseBrokerJsonAndDisplay(broker) {
     }
     
     // topic endpoint
+    addEventTime("VPN TOPIC ENDPOINTS", broker);
     tblDom = document.createElement("table");
     overwriteTableHeaders(tblDom, ["Topic Name", "Topic Subscribed", "Owner", "Permissions", "Egress", "Ingress", "Access Type", "Max Spool", "Max Bind"]);
     for (topic in broker.vpn[vpn].topicEndpoint) {
@@ -654,22 +655,32 @@ async function parseBrokerJsonAndDisplay(broker) {
         addToBodyOrDom(tblDom, "vpns");
         await sleep(0);
     }
+    addEventTime(`${vpn} VPN END`, broker);
   }
   
   fillTableTd("aclSummaryTable");
   fillTableTd("cpSummaryTable");
   fillTableTd("cuSummaryTable");
 
+  addEventTime("PROBLEMS", broker);
+  overwriteTableHeaders("problemListTable", ["Severity", "Area", "Description"]);
+  //for (problem of problems) {
+  //  addRowToTable("problemListTable", problem);
+  //}
+  document.getElementById("hostnamePanel").textContent = "Loaded !";
+  setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);
+}
+async function parseClientJsonAndDisplay(client) {
   //client detail list
   addHeaderToDOM("Clients", 1, "mainPanel");
   tblDom = document.createElement("table");
   overwriteTableHeaders(tblDom, ["VPN", "Client Username", "API", "Version", "IP", "Detail"]);
-  for (api of Object.keys(clientData)) {
-    for (ver of Object.keys(clientData[api])) {
-      for (vpn of Object.keys(clientData[api][ver])) {
-        for (user of Object.keys(clientData[api][ver][vpn])) {
-          for (ip of Object.keys(clientData[api][ver][vpn][user])) {
-            addRowToTable(tblDom, [vpn, user, api, ver, ip, clientData[api][ver][vpn][user][ip].join("<br/>")]);
+  for (api of Object.keys(client)) {
+    for (ver of Object.keys(client[api])) {
+      for (vpn of Object.keys(client[api][ver])) {
+        for (user of Object.keys(client[api][ver][vpn])) {
+          for (ip of Object.keys(client[api][ver][vpn][user])) {
+            addRowToTable(tblDom, [vpn, user, api, ver, ip, client[api][ver][vpn][user][ip].join("<br/>")]);
           }
         }
       }
@@ -678,11 +689,4 @@ async function parseBrokerJsonAndDisplay(broker) {
   addToBodyOrDom(createCopyTableButtonDom(tblDom), "mainPanel");
   addToBodyOrDom(tblDom, "mainPanel");
   await sleep(0);
-
-  overwriteTableHeaders("problemListTable", ["Severity", "Area", "Description"]);
-  for (problem of problems) {
-    addRowToTable("problemListTable", problem);
-  }
-  document.getElementById("hostnamePanel").textContent = "Loaded !";
-  setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);
 }

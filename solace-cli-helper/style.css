@@ -57,6 +57,9 @@ body {
 a {
   text-decoration: none;
 }
+button {
+  margin-right: 10px;
+}
 code {
   color: var(--sol-dark-green);
   font-family: monospace;
@@ -113,23 +116,23 @@ div.notice-panel {
 }
 div.hostname-panel {
   display: flex;
-  background-color: rgb(00, 171, 145, 0.1);
+  background-color: #E5F6F4;
   border-color: var(--sol-mid-green);
   border-radius: 5px;
   border-style: solid;
   border-width: 2px;
   
   font-family: monospace;
-  font-size: 0.7em;
   font-weight: bold;
 
-  max-width: 100px;
+  max-width: 200px;
+  height: 50px;
   margin: 20px;
   padding: 5px 10px;
   
   position: absolute;
-  top: 55px;
-  right: 0px;
+  top: 0px;
+  right: 520px;
   
   align-items: center;
   white-space: wrap;

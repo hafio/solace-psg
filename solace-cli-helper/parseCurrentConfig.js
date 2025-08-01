@@ -474,6 +474,7 @@ function processCLI(lines, broker = {}) {
         vpnName = _TMP[1];
         if (typeof broker.vpn[vpnName] === 'undefined')
           broker.vpn[vpnName] = {
+            name: vpnName,
             authentication: { basic: {}, clientCertificate: {}, oauth: {}, },
             authorization: { group: {} },
             svc: { smf: {}, web: {}, rest: {}, mqtt: {}, amqp: {}, },
@@ -507,20 +508,19 @@ function processCLI(lines, broker = {}) {
                     broker.vpn[vpnName].authentication.basic.authType = _TMP[2];
                     break;
                   case /(no )?basic shutdown/.test(lines[ln]):
-                    if (_TMP[0] == "no")
-                      broker.vpn[vpnName].authentication.basic.enabled = true;
-                    else
-                      broker.vpn[vpnName].authentication.basic.enabled = false;
+                    broker.vpn[vpnName].authentication.basic.enabled = (_TMP[0] == "no") ? true : false;
                     break;
           // BASIC: RADIUS
                   case /(no )?basic radius-domain/.test(lines[ln]):
-                    if (_TMP[0] == "no")
-                        broker.vpn[vpnName].authentication.basic.radiusDomain = "(not configured)";
-                    else
-                        broker.vpn[vpnName].authentication.basic.radiusDomain = _TMP[2];
+                    broker.vpn[vpnName].authentication.basic.radiusDomain = (_TMP[0] == "no") ? "(not configured)" : _TMP[2];
                     break;
           // BASIC: CLIENT CERTIFICATE
-                  case /client-certificate/.test(lines[ln]):
+            // SEEMS TO BE SOFTWARE SETTING (TBC) TODO TODO TODO
+                  case /(no )?client-certificate shutdown/.test(lines[ln]):
+                    broker.vpn[vpnName].authentication.clientCertificate.enabled = (_TMP[0] == "no") ? true : false;
+                    break;
+            // SEEMS TO BE APPLIANCE SETTING (TBC) TODO
+                  case /^    client-certificate$/.test(lines[ln]):
                     while (checkCliExitBlock(lines, ++ln, 6)) {
                       if (/^      no shutdown/.test(lines[ln])) {
                         broker.vpn[vpnName].authentication.clientCertificate.enabled = true;
@@ -537,10 +537,8 @@ function processCLI(lines, broker = {}) {
                       broker.vpn[vpnName].authentication.oauth.defaultProvider = _TMP[2];
                     break;
                   case /(no )?oauth shutdown/.test(lines[ln]):
-                    if (_TMP[0] == "no")
-                      broker.vpn[vpnName].authentication.oauth.enabled = true;
-                    else
-                      broker.vpn[vpnName].authentication.oauth.enabled = false;
+                    broker.vpn[vpnName].authentication.oauth.enabled = (_TMP[0] == "no") ? true : false;
+                    break;
                 }
               }
               updateStatus(ln, lines.length, "currentConfigLinesProcessed");
@@ -563,7 +561,7 @@ function processCLI(lines, broker = {}) {
                       if (_TMP[0] == "acl-profile")
                         authGrp.aclProfile = _TMP[1];
                       else if (_TMP[0] == "client-profile")
-                        authGrp.clientProfile = _TMP[1];
+                        authGrp.clientProfile = _TMP[1]
                       else if (_TMP[0] == "no" && _TMP[1] == "shutdown")
                         authGrp.enabled = true;
                       else if (_TMP[0] == "shutdown")
@@ -762,9 +760,7 @@ function processCLI(lines, broker = {}) {
               break;
       // QUEUES & TOPIC ENDPOINTS
             case "create":
-              strSt = lines[ln].indexOf('"') + 1;
-              strEd = lines[ln].indexOf('"', strSt);
-              endpointName = lines[ln].substring(strSt, strEd);
+              endpointName = _TMP[2];
               if (_TMP[1] == "topic-endpoint") {
                 endpointType =  "topicEndpoint";
                 broker.vpn[vpnName][endpointType][endpointName] = {};
@@ -794,13 +790,7 @@ function processCLI(lines, broker = {}) {
                     broker.vpn[vpnName].cumulativeMaxSpoolUsage += parseInt(_TMP[1]);
                     break;
                   case /^    (no )?topic/.test(lines[ln]):
-                    if (_TMP[0] == "no")
-                      broker.vpn[vpnName][endpointType][endpointName].topic = "(none)";
-                    else {
-                      strSt = lines[ln].indexOf('"') + 1;
-                      strEd = lines[ln].indexOf('"', strSt);
-                      broker.vpn[vpnName][endpointType][endpointName].topic = lines[ln].substring(strSt, strEd);
-                    }
+                    broker.vpn[vpnName][endpointType][endpointName].topic = (_TMP[0] == "no") ? "(none)" : _TMP[1];
                     break;
                   case /^    (no )?owner/.test(lines[ln]):
                     broker.vpn[vpnName][endpointType][endpointName].owner = (_TMP[0] == "no") ?  "(none)" : _TMP[1];
@@ -829,12 +819,10 @@ function processCLI(lines, broker = {}) {
                     broker.vpn[vpnName][endpointType][endpointName].ingressEnabled = (_TMP[0] == "no") ? true : false;
                     break;
                   case /subscription topic/.test(lines[ln]):
-                    strSt = lines[ln].indexOf('"') + 1;
-                    strEd = lines[ln].indexOf('"', strSt);
                     //strLen = lines[ln].length - 24; // as spaces are valid in topic strings, this is to handle and simply take the line substr, minus "trailing external" as that indicates topic not created by CLI
                     //if (_TMP[_TMP.length-1] == "external")
                     //  strLen = strLen - 9; // " external" = 9 characters
-                    broker.vpn[vpnName][endpointType][endpointName].subscriptionTopic.push(lines[ln].substring(strSt, strEd));
+                    broker.vpn[vpnName][endpointType][endpointName].subscriptionTopic.push(_TMP[2]);
                     break;
                 }
               }
@@ -848,7 +836,8 @@ function processCLI(lines, broker = {}) {
 // ACL PROFILE SPECIFIC BLOCK
 ////////////////////////////////////////////////////////////
       case /^acl-profile .+ message-vpn .+/.test(lines[ln]):
-        aclName = _TMP[1], vpnName = _TMP[3];
+        aclName = _TMP[1];
+        vpnName = _TMP[3];
         broker.vpn[vpnName].aclProfile[aclName] = { clientConnectException: [], publishTopicSmfException:[], subscribeTopicSmfException: [], publishTopicMqttException:[], subscribeTopicMqttException: [], mappedClientUsername: [] };
         broker.vpn[vpnName].aclProfileCount = Object.keys(broker.vpn[vpnName].aclProfile).length;
         while (checkCliExitBlock(lines, ++ln, 2)) {
@@ -874,55 +863,32 @@ function processCLI(lines, broker = {}) {
 ////////////////////////////////////////////////////////////
 // CLIENT USERNAME SPECIFIC BLOCK
 ////////////////////////////////////////////////////////////
-      case /create client-username .+ message-vpn .+/.test(lines[ln]):
-        usrName = _TMP[2], vpnName = _TMP[4];
-        broker.vpn[vpnName].clientUsername[usrName] = {};
-        broker.vpn[vpnName].clientUsernameCount = Object.keys(broker.vpn[vpnName].clientUsername).length;
-        while (checkCliExitBlock(lines, ++ln, 2)) {
-          _TMP = cleanArr(lines[ln]);
-          if (_TMP[0] == "acl-profile") {
-            broker.vpn[vpnName].clientUsername[usrName].aclProfile = _TMP[1];
-            // add to acl profile
-            if (!_TMP[1].startsWith("#") && !broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.includes(usrName))
-                broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.push(usrName);
-          } else if (_TMP[0] == "client-profile") {
-            broker.vpn[vpnName].clientUsername[usrName].clientProfile = _TMP[1];
-            // add to client profile
-            if (!_TMP[1].startsWith("#")) {
-              if (!broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.includes(usrName))
-                broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.push(usrName);
-            // add properties from client profile
-              broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile = broker.vpn[vpnName].clientProfile[_TMP[1]].perClientUsername.maxConnections;
-            // add properties to cumulative
-              broker.vpn[vpnName].cumulativeMaxConnectionsFromClientUsername += broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile;
-            }
-          } else if (_TMP[0] == "no" && _TMP[1] == "shutdown")
-            broker.vpn[vpnName].clientUsername[usrName].enabled = true;
-          else if (_TMP[0] == "shutdown")
-            broker.vpn[vpnName].clientUsername[usrName].enabled = false;
-        }
-        updateStatus(ln, lines.length, "currentConfigLinesProcessed");
-        break;
-      case /client-username .+ message-vpn .+/.test(lines[ln]):
+      case /(create )?client-username .+ message-vpn .+/.test(lines[ln]):
+        if (_TMP[0] == "create")
+          _TMP.splice(0, 1);
         usrName = _TMP[1], vpnName = _TMP[3];
         broker.vpn[vpnName].clientUsername[usrName] = {};
         broker.vpn[vpnName].clientUsernameCount = Object.keys(broker.vpn[vpnName].clientUsername).length;
         while (checkCliExitBlock(lines, ++ln, 2)) {
-          _TMP = cleanArr(lines[ln]);
+          _TMP = cleanArr(lines[ln]), profile = "";
           if (_TMP[0] == "acl-profile") {
-            broker.vpn[vpnName].clientUsername[usrName].aclProfile = _TMP[1];
+            profile = _TMP[1];
+            broker.vpn[vpnName].clientUsername[usrName].aclProfile = profile;
             // add to acl profile
-            if (!broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.includes(usrName))
-                broker.vpn[vpnName].aclProfile[_TMP[1]].mappedClientUsername.push(usrName);
+            if (!_TMP[1].startsWith("#") && !broker.vpn[vpnName].aclProfile[profile].mappedClientUsername.includes(usrName))
+                broker.vpn[vpnName].aclProfile[profile].mappedClientUsername.push(usrName);
           } else if (_TMP[0] == "client-profile") {
-            broker.vpn[vpnName].clientUsername[usrName].clientProfile = _TMP[1];
+            profile = _TMP[1];
+            broker.vpn[vpnName].clientUsername[usrName].clientProfile = profile;
             // add to client profile
-            if (!broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.includes(usrName))
-                broker.vpn[vpnName].clientProfile[_TMP[1]].mappedClientUsername.push(usrName);
-            // add max conn from client profile
-            broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile = broker.vpn[vpnName].clientProfile[_TMP[1]].perClientUsername.maxConnections;
-            // add to cumulative max conn
-            broker.vpn[vpnName].cumulativeMaxConnectionsFromClientUsername += broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile;
+            if (!_TMP[1].startsWith("#")) {
+              if (!broker.vpn[vpnName].clientProfile[profile].mappedClientUsername.includes(usrName))
+                broker.vpn[vpnName].clientProfile[profile].mappedClientUsername.push(usrName);
+            // add properties from client profile
+              broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile = broker.vpn[vpnName].clientProfile[profile].perClientUsername.maxConnections;
+            // add properties to cumulative
+              broker.vpn[vpnName].cumulativeMaxConnectionsFromClientUsername += broker.vpn[vpnName].clientUsername[usrName].maxConnectionFromClientProfile;
+            }
           } else if (_TMP[0] == "no" && _TMP[1] == "shutdown")
             broker.vpn[vpnName].clientUsername[usrName].enabled = true;
           else if (_TMP[0] == "shutdown")

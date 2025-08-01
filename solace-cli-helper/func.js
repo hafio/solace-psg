@@ -114,7 +114,9 @@ function copyTableBody(table) {
 
 function createTableBodyCountSpan(idOrDom) {
   bodyDom = returnTableBodyDom(idOrDom);
+  tableDom = returnParentTableDom(bodyDom);
   let span = document.createElement("span");
+  span.id = tableDom.id + "Rows";
   span.classList.add("row-count");
   span.textContent = bodyDom.children.length + " rows";
   return span;
@@ -131,6 +133,15 @@ function createCopyTableButtonDom(table) {
     sel.addRange(rng);
     document.execCommand("copy");
     sel.removeAllRanges();
+  };
+  return dom;
+}
+
+function createPopulateTableButtonDom(table, vpn) {
+  let dom = document.createElement("button");
+  dom.textContent = "Populate Table";
+  dom.onclick = () => {
+    populateClientUsernameTable(table, vpn);
   };
   return dom;
 }
@@ -153,6 +164,7 @@ function initializeMainPanel() {
     <a name="issues"><h1>Issues</h1></a>
     <div id="problems" class="scrolling">
       <button onclick="copyTable(document.getElementById('problemListTable'))">Copy Table</button>
+      <button onclick="populateProblemTable('problemListTable')">Populate Table</button>
       <span class="row-count" id="problemListTableRows"></span>
       <table class="summary" id="problemListTable">
         <thead class="sticky"></thead>
@@ -239,6 +251,52 @@ function overwriteTableHeaders(idOrDom, cellArr) {
   }
 }
 
+function populateClientUsernameTable(domOrId, vpn) {
+  overwriteTableHeaders(domOrId, ["Client Username", "State", "ACL Profile", "Client Profile"]);
+  returnTableBodyDom(domOrId).innerHTML = "";
+  for (cu in vpn.clientUsername) {
+      // add to cu summary table
+      if (!allList.cu.includes(cu)) {
+          allList.cu.push(cu);
+          addRowToTable("cuSummaryTable", [cu, ...Array(allList.vpn.indexOf(vpn.name)).fill(""), "&check;"]);
+      } else {
+          updateTableCell("cuSummaryTable", allList.cu.indexOf(cu), allList.vpn.indexOf(vpn.name)+1, "&check;");
+      }
+      // add to cu individual tables
+      addRowToTable(domOrId, [
+          cu,
+          (vpn.clientUsername[cu].enabled) ? "Enabled" : "Disabled",
+          vpn.clientUsername[cu].aclProfile,
+          vpn.clientUsername[cu].clientProfile,
+      ]);
+  }
+  fillTableTd("cuSummaryTable");
+}
+
+async function populateProblemTable(domId) {
+  returnTableBodyDom(domId).innerHTML = "";
+  overwriteTableHeaders(domId, ["Severity", "Area", "Description"]);
+  for (problem of problems) {
+    addRowToTable(domId, problem);
+    if (Math.floor(Math.random() * 100) == 0)
+      await sleep(0);
+  }
+}
+
+function returnParentTableDom(idOrDom) {
+  let bodyDom = (typeof idOrDom === 'string') ? document.getElementById(idOrDom) : idOrDom;
+  if (bodyDom.tagName.toUpperCase() == "TABLE") {
+    return bodyDom;
+  } else if (bodyDom.tagName.toUpperCase() == "TBODY") {
+    while (bodyDom.tagName.toUpperCase() != "TABLE")
+      bodyDom = bodyDom.parentElement;
+    return bodyDom;
+  } else {
+    throw "Element is not a TABLE/TBODY.";
+  }
+  return null;
+}
+
 function returnTableBodyDom(idOrDom, createBody = true) {
   let tableDom = (typeof idOrDom === 'string') ? document.getElementById(idOrDom) : idOrDom;
   let bodyDom = null;
@@ -321,6 +379,7 @@ async function processFiles() {
     vpn: {},
     username: {},
     execTime: [],
+    totalExecTime: 0,
   }
   let client = [];
   document.getElementById("gatherDiagLinesProcessed").innerHTML = "";
@@ -330,13 +389,21 @@ async function processFiles() {
   broker.execStart = performance.now();
   if (document.getElementById("currentConfigFile").files.length > 0)
     broker = await processCLI(files.configCliData, broker);
+  addEventTime("Parsed current-config cli", broker);
   if (document.getElementById("clientDetailFile").files.length > 0)
     client = await processClients(files.clientDetailData, client);
+  addEventTime("Parsed Client Detail", broker);
   if (document.getElementById("gatherDiagFile").files.length > 0)
     broker = await processGD(files.gatherDiagData, broker);
+  addEventTime("Parsed Gather Diagnostics", broker);
   brokerData = broker;
   clientData = client;
-  setTimeout( () => { parseBrokerJsonAndDisplay(broker); }, 100);
+  addEventTime("BROKER START", broker);
+  await parseBrokerJsonAndDisplay(broker);
+  addEventTime("CLIENT LIST START", broker);
+  await parseClientJsonAndDisplay(client);
+  addEventTime("END", broker);
+
 }
 
 ///////////////
@@ -360,7 +427,8 @@ function checkTopicString(topic) {
 }
 
 function cleanArr(text) {
-  return text.replaceAll('"','').trim().split(/\s+/);
+  return (text == "") ? [] : text.match(/"[^"]*"|\S+/g).map(s => s.replace(/^"|"$/g, ''));
+  //return text.replaceAll('"','').trim().split(/\s+/);
 }
 
 function compareVersions(v1, v2) {
@@ -430,4 +498,16 @@ function processGlobalDefaultAccess(lineNum, lines) {
     lineNum: --lineNum,
     obj: { globalAccess: glob, defaultAccess: def, accessException: accessEx, }
   };
+}
+
+/////////////////
+// PERFORMANCE //
+/////////////////
+
+function addEventTime(text, broker) {
+  prevTime = (broker.execTime.length > 0) ? broker.execTime[broker.execTime.length - 1].time : broker.execStart;
+  nowTime = performance.now();
+  duration = parseFloat((nowTime - prevTime).toFixed(3));
+  broker.execTime.push({ event: text, time: nowTime, duration: duration});
+  broker.totalExecTime += duration;
 }
