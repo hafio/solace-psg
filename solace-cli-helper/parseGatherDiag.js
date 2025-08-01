@@ -163,7 +163,6 @@ function processGD(lines, broker = {}) {
 // SCALING
         case /^Scaling\:/.test(lines[ln]):
           while (lines[++ln] != "") {
-            console.log(lines[ln]);
             _TMP = cleanArr(lines[ln]);
             switch (true) {
               case /Max Connections\: /.test(lines[ln]):
