@@ -142,11 +142,11 @@ function createCopyTableButtonDom(table) {
   return dom;
 }
 
-function createPopulateTableButtonDom(table, vpn) {
+function createPopulateTableButtonDom(table, vpn, clickFunc) {
   let dom = document.createElement("button");
   dom.textContent = "Populate Table";
   dom.onclick = () => {
-    populateClientUsernameTable(table, vpn);
+    clickFunc(table, vpn);
   };
   return dom;
 }
@@ -290,8 +290,18 @@ async function populateProblemTable(domId) {
     if (Math.floor(Math.random() * 100) == 0)
       await sleep(0);
   }
+  document.getElementById("problemListTableRows").textContent += " - done";
 }
 
+function populateQueueTopicSubscriptionTable(domOrId, vpn) {
+  overwriteTableHeaders(domOrId, ["Queue", "Topic Subscription"]);
+  returnTableBodyDom(domOrId).innerHTML = "";
+  for (queue in vpn.queue) {
+    for (i in vpn.queue[queue].subscriptionTopic) {
+      addRowToTable(domOrId, [queue, vpn.queue[queue].subscriptionTopic[i]]);
+    }
+  }
+}
 function returnParentTableDom(idOrDom) {
   let bodyDom = (typeof idOrDom === 'string') ? document.getElementById(idOrDom) : idOrDom;
   if (bodyDom.tagName.toUpperCase() == "TABLE") {

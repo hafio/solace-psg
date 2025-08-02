@@ -528,10 +528,10 @@ async function parseBrokerJsonAndDisplay(broker) {
     addEventTime("VPN CLIENT USERNAME", broker);
     addHeaderToDOM(`Client Usernames:`, 2, "vpns");
     tblDom = document.createElement("table");
-    tblDom.id = crypto.randomUUID();
+    tblDom.id = "cu-" + crypto.randomUUID();
     overwriteTableHeaders(tblDom, ["Client Username", "State", "ACL Profile", "Client Profile"]);
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
-    addToBodyOrDom(createPopulateTableButtonDom(tblDom, broker.vpn[vpn]), "vpns");
+    addToBodyOrDom(createPopulateTableButtonDom(tblDom, broker.vpn[vpn], populateClientUsernameTable), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
     addToBodyOrDom(tblDom, "vpns");
     addEmptyLastHeaderAnchor();
@@ -540,7 +540,10 @@ async function parseBrokerJsonAndDisplay(broker) {
     // queues
     addEventTime("VPN QUEUES", broker);
     tblDom = document.createElement("table");
-    overwriteTableHeaders(tblDom, ["Queue", "Owner", "Permissions", "Egress", "Ingress", "Access Type", "Max Spool", "Max Bind"]);
+    overwriteTableHeaders(tblDom, ["Queue", "Owner", "Permissions", "Egress", "Ingress", "Access Type", "Max Spool", "Max Bind", "Subscription Count"]);
+    qSubDom = document.createElement("table");
+    qSubDom.id = "qsub-" + crypto.randomUUID();
+    overwriteTableHeaders(qSubDom, ["Queue", "Topic Subscription"]);
     subDom = document.createElement("table");
     overwriteTableHeaders(subDom, ["Queue", "Topic Subscription", "Comments"]);
     for (queue in broker.vpn[vpn].queue) {
@@ -588,6 +591,7 @@ async function parseBrokerJsonAndDisplay(broker) {
           broker.vpn[vpn].queue[queue].accessType,
           maxSpool,
           maxBind,
+          broker.vpn[vpn].queue[queue].subscriptionTopic.length,
       ]);
       if (subTop.length > 0) 
           addRowToTable(subDom, [
@@ -597,20 +601,26 @@ async function parseBrokerJsonAndDisplay(broker) {
           ]);
     }
     if (tblDom.getElementsByTagName("tbody").length != 0) {
-        addHeaderToDOM(`Queues:`, 2, "vpns");
-        addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
-        addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
-        addToBodyOrDom(tblDom, "vpns");
-        addEmptyLastHeaderAnchor();
-        await sleep(0);
+      addHeaderToDOM(`Queues:`, 2, "vpns");
+      addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
+      addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
+      addToBodyOrDom(tblDom, "vpns");
+      addEmptyLastHeaderAnchor();
+      await sleep(0);
     }
+    addHeaderToDOM(`Queue subscription:`, 3, "vpns");
+    addToBodyOrDom(createCopyTableButtonDom(qSubDom), "vpns");
+    addToBodyOrDom(createPopulateTableButtonDom(qSubDom, broker.vpn[vpn], populateQueueTopicSubscriptionTable), "vpns");
+    addToBodyOrDom(createTableBodyCountSpan(qSubDom), "vpns");
+    addToBodyOrDom(qSubDom, "vpns");
+    addEmptyLastHeaderAnchor();
     if (subDom.getElementsByTagName("tbody").length != 0) {
-        addHeaderToDOM(`Queue subscription issues:`, 3, "vpns");
-        addToBodyOrDom(createCopyTableButtonDom(subDom), "vpns");
-        addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
-        addToBodyOrDom(subDom, "vpns");
-        addEmptyLastHeaderAnchor();
-        await sleep(0);
+      addHeaderToDOM(`Queue subscription issues:`, 3, "vpns");
+      addToBodyOrDom(createCopyTableButtonDom(subDom), "vpns");
+      addToBodyOrDom(createTableBodyCountSpan(subDom), "vpns");
+      addToBodyOrDom(subDom, "vpns");
+      addEmptyLastHeaderAnchor();
+      await sleep(0);
     }
     
     // topic endpoint
