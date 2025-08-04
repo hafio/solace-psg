@@ -530,6 +530,17 @@ async function parseBrokerJsonAndDisplay(broker) {
     tblDom = document.createElement("table");
     tblDom.id = "cu-" + crypto.randomUUID();
     overwriteTableHeaders(tblDom, ["Client Username", "State", "ACL Profile", "Client Profile"]);
+    
+    for (cu in broker.vpn[vpn].clientUsername) {
+    // add to cu summary table
+      if (!allList.cu.includes(cu)) {
+        allList.cu.push(cu);
+        addRowToTable("cuSummaryTable", [cu, ...Array(allList.vpn.indexOf(vpn)).fill(""), "&check;"]);
+      } else {
+        updateTableCell("cuSummaryTable", allList.cu.indexOf(cu), allList.vpn.indexOf(vpn)+1, "&check;");
+      }
+    }
+    
     addToBodyOrDom(createCopyTableButtonDom(tblDom), "vpns");
     addToBodyOrDom(createPopulateTableButtonDom(tblDom, broker.vpn[vpn], populateClientUsernameTable), "vpns");
     addToBodyOrDom(createTableBodyCountSpan(tblDom), "vpns");
@@ -681,6 +692,7 @@ async function parseBrokerJsonAndDisplay(broker) {
 
   addEventTime("PROBLEMS", broker);
   overwriteTableHeaders("problemListTable", ["Severity", "Area", "Description"]);
+  overwriteTableHeaders("problemListTableSummary", ["Severity", "Area", "Count"]);
   //for (problem of problems) {
   //  addRowToTable("problemListTable", problem);
   //}

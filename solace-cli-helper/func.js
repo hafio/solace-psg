@@ -175,6 +175,10 @@ function initializeMainPanel() {
         <thead class="sticky"></thead>
       </table>
     </div>
+    <a name="issueSummary"><h2>Issue Summary Count</h2></a>
+    <button onclick="copyTable(document.getElementById('problemListTableSummary'))">Copy Table</button>
+    <span class="row-count" id="problemListTableSummaryRows"></span>
+    <table class="summary" id="problemListTableSummary"></table>
     <div id="brokerSummary">
       <a name="brokerSummary">
         <h1>Broker Summary</h1>
@@ -285,10 +289,22 @@ function populateClientUsernameTable(domOrId, vpn) {
 async function populateProblemTable(domId) {
   returnTableBodyDom(domId).innerHTML = "";
   overwriteTableHeaders(domId, ["Severity", "Area", "Description"]);
+  summary = {};
   for (problem of problems) {
     addRowToTable(domId, problem);
+    if (typeof summary[problem[0]] === 'undefined')
+      summary[problem[0]] = {};
+    if (typeof summary[problem[0]][problem[1]] === 'undefined')
+      summary[problem[0]][problem[1]] = 1;
+    else
+      summary[problem[0]][problem[1]]++;
     if (Math.floor(Math.random() * 100) == 0)
       await sleep(0);
+  }
+  for (sev in summary) {
+    for (cat in summary[sev]) {
+      addRowToTable(domId + "Summary", [sev, cat, summary[sev][cat]]);
+    }
   }
   document.getElementById("problemListTableRows").textContent += " - done";
 }
