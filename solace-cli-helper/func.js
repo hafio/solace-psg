@@ -212,6 +212,12 @@ function initializeMainPanel() {
       <button onclick="copyTable(document.getElementById('vpnSummaryReplTable'))">Copy Table</button>
       <table class="summary" id="vpnSummaryReplTable"></table>
       
+      <a name="vpnServices"><h2>VPN Services</h2></a>
+      <button onclick="copyTable(document.getElementById('vpnServicesTable'))">Copy Table</button>
+      <table class="summary" id="vpnServicesTable"></table>
+      <button onclick="copyTable(document.getElementById('vpnServices2Table'))">Copy Table</button>
+      <table class="summary" id="vpnServices2Table"></table>
+      
       <a name="vpnCountSummary"><h2>Count Summary</h2></a>
       <button onclick="copyTable(document.getElementById('vpnCountSummaryTable'))">Copy Table</button>
       <table class="summary" id="vpnCountSummaryTable"></table>

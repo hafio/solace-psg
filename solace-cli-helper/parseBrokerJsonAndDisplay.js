@@ -220,6 +220,8 @@ async function parseBrokerJsonAndDisplay(broker) {
   
   overwriteTableHeaders("vpnSummaryTable", ["VPN", "State", "Basic Authentication", "Client Certificate", "OAuth2", "Authorization"]);
   overwriteTableHeaders("vpnSummaryReplTable", ["VPN", "Replication (Rep)", "SSL", "Ack Propagation", "Rep Mode", "Reject Msg on Discard"]);
+  overwriteTableHeaders("vpnServicesTable", ["VPN", "SMF", "SMFS", "WS", "WSS", "AMQP", "AMQPS"]);
+  overwriteTableHeaders("vpnServices2Table", ["VPN", "MQTT", "MQTT-SSL", "MQTT-WS", "MQTT-WSS", "HTTP", "HTTPS"]);
   overwriteTableHeaders("vpnCountSummaryTable", ["VPN", "ACL Profiles", "Client Profiles", "Client Usernames", "Bridges", "Queues", "Topic Endpoints"]);
   overwriteTableHeaders("vpnSummaryLimitsTable", ["VPN", "Max Connections", "Max Spool Usage", "Max Egress", "Max Ingress", "Max Queue/Topic Endpoints"]);
   
@@ -301,6 +303,24 @@ async function parseBrokerJsonAndDisplay(broker) {
       ackPropagation,
       repTxnMode,
       rejectMsgOnDiscard,
+    ]);
+    addRowToTable("vpnServicesTable", [
+      vpn,
+      (broker.vpn[vpn].svc.smf.plainEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.smf.sslEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.web.plainEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.web.sslEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.amqp.plainEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.amqp.sslEnabled) ? "Enabled" : "Disabled",
+    ]);
+    addRowToTable("vpnServices2Table", [
+      vpn,
+      (broker.vpn[vpn].svc.mqtt.plainEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.mqtt.sslEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.mqtt.wsEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.mqtt.wssEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.rest.incomingPlainEnabled) ? "Enabled" : "Disabled",
+      (broker.vpn[vpn].svc.rest.incomingSslEnabled) ? "Enabled" : "Disabled",
     ]);
     addRowToTable("vpnCountSummaryTable", [
       vpn,
