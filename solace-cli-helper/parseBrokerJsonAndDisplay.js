@@ -306,21 +306,21 @@ async function parseBrokerJsonAndDisplay(broker) {
     ]);
     addRowToTable("vpnServicesTable", [
       vpn,
-      (broker.vpn[vpn].svc.smf.plainEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.smf.sslEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.web.plainEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.web.sslEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.amqp.plainEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.amqp.sslEnabled) ? "Enabled" : "Disabled",
+      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.plainEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.sslEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.web.plainEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.web.sslEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.plainEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.sslEnabled"),
     ]);
     addRowToTable("vpnServices2Table", [
       vpn,
-      (broker.vpn[vpn].svc.mqtt.plainEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.mqtt.sslEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.mqtt.wsEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.mqtt.wssEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.rest.incomingPlainEnabled) ? "Enabled" : "Disabled",
-      (broker.vpn[vpn].svc.rest.incomingSslEnabled) ? "Enabled" : "Disabled",
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.plainEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.sslEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wsEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wssEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingPlainEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingSslEnabled"),
     ]);
     addRowToTable("vpnCountSummaryTable", [
       vpn,

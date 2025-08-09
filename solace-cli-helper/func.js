@@ -12,6 +12,21 @@ function capitalizeWord(text) {
     return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
 }
 
+function enabledOrDisabled(obj, path, trueVal = "Enabled", falseVal = "Disabled") {
+  if (!obj || typeof obj !== 'object') return "(undefined)";
+
+  const keys = Array.isArray(path) ? path : path.split('.');
+
+  for (let key of keys) {
+    if (!(key in obj)) return "(undefined)";
+    obj = obj[key];
+  }
+
+  if (obj)
+    return trueVal;
+  return falseVal;
+}
+
 function escapeHTML(text) {
   textDom = document.createElement("div");
   textDom.textContent = text;

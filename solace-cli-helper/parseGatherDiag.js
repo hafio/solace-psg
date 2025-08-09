@@ -176,21 +176,36 @@ function processGD(lines, broker = {}) {
           updateStatus(ln, lines.length, "gatherDiagLinesProcessed");
           break;
 // STORAGE DEVICES FOR NON LUN (IE SOFTWARE)
-        case /^# CLI command: show storage-element * detail/.test(lines(ln)):
+        case /^# CLI command\: show storage-element/.test(lines[ln]):
           ln = ln + 4;
+          storage = name = size = mount = null;
+          if (!hasProperty(broker.hardware, "diskMount"))
+            broker.hardware.diskMount = {};
           while (!lines[++ln].startsWith("#")) {
-            if (lines[ln].startsWith(" ")) {
-              // DO SAVE
+            _TMP = cleanArr(lines[ln]);
+            if (lines[ln] == "") {
+              if (storage == "spool") {
+                broker.hardware.diskMount[mount] = { size: size };
+                broker.msgSpool.diskMount = mount;
+              }
+              storage = name = size = mount = null;
             }
-            if (lines[ln].startsWith("Storage Element")) {
-              
-            }
+            if (lines[ln].startsWith("Storage Element"))
+              storage = _TMP[_TMP.length-1];
+            else if (lines[ln].startsWith("Mounted On"))
+              mount = _TMP[_TMP.length-1];
+            else if (/^\s+ Name \s+: /.test(lines[ln]))
+              mount = _TMP[3];
+            else if (lines[ln].startsWith("Size (1K-blocks)"))
+              size = `${_TMP[3]} ` + storageUnitMapping[_TMP[4]];
+            else if (/size/.test(lines[ln]))
+              size = `${_TMP[2]} ` + storageUnitMapping[_TMP[3]];
           }
           break;
         case /^Storage Devices/.test(lines[ln]):
           if (!hasProperty(broker.hardware, "diskMount"))
             broker.hardware.diskMount = {};
-          let storage = size = units = null, contains = [];
+          storage = size = units = null, contains = [];
           while (lines[++ln] != "") {
             _TMP = cleanArr(lines[ln]);
             switch (true) {
