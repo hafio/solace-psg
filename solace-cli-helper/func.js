@@ -1,17 +1,6 @@
 let brokerData = clientData = null;
 let files = {clientDetailData: null, configCliData: null, gatherDiagData: null };
-queuePermissionLevels = {
-  0: "no-access",
-  1: "read-only",
-  2: "consume",
-  3: "modify-topic",
-  4: "delete",
-  "no-access": 0,
-  "read-only": 1,
-  "consume": 2,
-  "modify-topic": 3,
-  "delete": 4,
-};
+
 
 ///////////////////////
 // STRING OPERATIONS //

@@ -1,3 +1,21 @@
+const queuePermissionLevels = {
+  0: "no-access",
+  1: "read-only",
+  2: "consume",
+  3: "modify-topic",
+  4: "delete",
+  "no-access": 0,
+  "read-only": 1,
+  "consume": 2,
+  "modify-topic": 3,
+  "delete": 4,
+};
+const aclKeywordMapping = {
+  "client-connect": "clientConnect",
+  "publish-topic": "publishTopic",
+  "subscribe-topic": "subscribeTopic",
+}
+
 function processCLI(lines, broker = {}) {
   ln = -1;
   while (++ln < lines.length) {
@@ -846,19 +864,18 @@ function processCLI(lines, broker = {}) {
         while (checkCliExitBlock(lines, ++ln, 2)) {
           _TMP = cleanArr(lines[ln]);
           if (_TMP[1] == "default-action") {
-            field = "DefaultAction";
-            value = _TMP[2];
-          } else if (_TMP[1] == "exceptions") {
+            field = aclKeywordMapping[_TMP[0]] + "DefaultAction";
+            broker.vpn[vpnName].aclProfile[aclName][field] = _TMP[2];
+          } else if (_TMP[1].startsWith("exception")) {
+            if (_TMP[0] == "client-connect")
+              broker.vpn[vpnName].aclProfile[aclName].clientConnectException.push(_TMP[2]);
+            else { // publish-topic + subscribe-topic
+              field = aclKeywordMapping[_TMP[0]] + capitalizeWord(_TMP[2]) + "Exception";
+              broker.vpn[vpnName].aclProfile[aclName][field] = _TMP.splice(4);
+            }
             field = capitalizeWord(_TMP[2]) + "Exception";
             value = _TMP.splice(4);
           }
-          if (_TMP[0] == "client-connect") {
-            (_TMP[1] == "exception") ? broker.vpn[vpnName].aclProfile[aclName]['clientConnect'+field].push(_TMP[2]) : broker.vpn[vpnName].aclProfile[aclName]['clientConnect'+field] = value;
-          }
-          else if (_TMP[0] == "publish-topic")
-            broker.vpn[vpnName].aclProfile[aclName]['publishTopic'+field] = value;
-          else if (_TMP[0] == "subscribe-topic")
-            broker.vpn[vpnName].aclProfile[aclName]['subscribeTopic'+field] = value;
         }
         updateStatus(ln, lines.length, "currentConfigLinesProcessed");
         break;

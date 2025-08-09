@@ -176,6 +176,17 @@ function processGD(lines, broker = {}) {
           updateStatus(ln, lines.length, "gatherDiagLinesProcessed");
           break;
 // STORAGE DEVICES FOR NON LUN (IE SOFTWARE)
+        case /^# CLI command: show storage-element * detail/.test(lines(ln)):
+          ln = ln + 4;
+          while (!lines[++ln].startsWith("#")) {
+            if (lines[ln].startsWith(" ")) {
+              // DO SAVE
+            }
+            if (lines[ln].startsWith("Storage Element")) {
+              
+            }
+          }
+          break;
         case /^Storage Devices/.test(lines[ln]):
           if (!hasProperty(broker.hardware, "diskMount"))
             broker.hardware.diskMount = {};
