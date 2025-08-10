@@ -15,8 +15,13 @@ function processGD(lines, broker = {}) {
         case /^Hostname\: /.test(lines[ln]):
           if (typeof broker.hostname === 'undefined')
             broker.hostname = _TMP[1];
-          else if (broker.hostname != _TMP[1])
+          else if (broker.hostname != _TMP[1]) {
+            initializeMainPanel();
+            document.getElementById("hostnamePanel").textContent = "Hostname do not match";
+            document.getElementById("hostnamePanel").classList.remove("no-display");
+            document.getElementById("hostnamePanel").classList.add("red-color");
             throw new Error("hostname for gather diagnostics file does not match");
+          }
           break;
         case /^Solace PubSub\+ .+ Version/.test(lines[ln]):
           broker.model = _TMP[2];

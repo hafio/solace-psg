@@ -47,6 +47,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   await sleep(0);
   aclProfileList = [], clientProfileList = [], clientUsernameList = [], problems = [];
   
+  document.getElementById("hostnamePanel").classList.remove("red-color");
   document.getElementById("hostnamePanel").textContent = "Loading " + broker.hostname + "...";
   document.getElementById("hostnamePanel").classList.remove("no-display");
   
@@ -154,8 +155,13 @@ async function parseBrokerJsonAndDisplay(broker) {
       problems.push(["LOW", "Redundancy Active Node", `Backup Redundancy Node (${broker.hostname}) is active.`]);
     }
   }
-  overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Mgmt LAG", "Msg Backbone LAG", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
-  addRowToTable("brokerSummaryTableIntf", [broker.hostname, vrfMgmt, vrfMsg, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
+  if (/(Enterprise|Standard)/.test(broker.platform)) {
+    overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
+    addRowToTable("brokerSummaryTableIntf", [broker.hostname, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
+  } else {
+    overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Mgmt LAG", "Msg Backbone LAG", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
+    addRowToTable("brokerSummaryTableIntf", [broker.hostname, vrfMgmt, vrfMsg, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
+  }
   
   //LAG details
   overwriteTableHeaders("brokerSummaryTableLag", ["Hostname", "VRF Mgmt Interfaces","VRF Msg Backbone Interfaces"]);
@@ -717,6 +723,7 @@ async function parseBrokerJsonAndDisplay(broker) {
   //  addRowToTable("problemListTable", problem);
   //}
   broker.processed = true;
+  document.getElementById("hostnamePanel").classList.remove("red-color");
   document.getElementById("hostnamePanel").textContent = "Loaded !";
   if (typeof broker.hostname !== 'undefined')
     setTimeout(() => { document.getElementById("hostnamePanel").textContent = broker.hostname; }, 5000);

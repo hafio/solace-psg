@@ -74,7 +74,7 @@ function processCLI(lines, broker = {}) {
                 break;
                 
               case "shutdown":
-                enabled=false;
+                enabled = false;
                 break;
                 
               case "no":
@@ -84,6 +84,7 @@ function processCLI(lines, broker = {}) {
                 
               case "exit":
                 broker.intf.vrfMgmt[name] = { enabled: enabled, type: typ, ipAddress: ip, };
+                // TODO might want to consider "OR" logic as null values will be treated as false too
                 broker.intf.vrfMgmtEnabled = broker.intf.vrfMgmtEnabled || enabled;
                 name = typ = enabled = ip = null;
                 break;

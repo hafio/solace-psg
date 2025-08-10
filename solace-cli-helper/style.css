@@ -142,6 +142,9 @@ div.hostname-panel {
   white-space: wrap;
   word-break: break-all;
 }
+div.red-color {
+  color: red !important;
+}
 span.error {
   color: red;
   font-weight: bold;
