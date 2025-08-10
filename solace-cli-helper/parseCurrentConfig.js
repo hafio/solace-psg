@@ -275,7 +275,7 @@ function processCLI(lines, broker = {}) {
         break;
       
       case /^hardware power-redundancy/.test(lines[ln]):
-        broker.redundancy.power = _TMP[2];
+        broker.redundancy.powerConfig = _TMP[2];
         break;
 // TODO ADD REPLICATION PSK
 // REPLICATION FOR APPLIANCE

@@ -111,8 +111,20 @@ async function parseBrokerJsonAndDisplay(broker) {
   
   // LAG/VRF & scaling
   addEventTime("Broker Hardware VRF Management", broker);
-  vrfMgmtDetails = "";
-  vrfMsgDetails = "";
+  vrfMgmtDetails = "", vrfMsgDetails = "", powerText = "";
+  if (hasProperty(broker.redundancy, 'powerConfig')) {
+    if (hasProperty(broker.redundancy, 'power')) {
+      powerArr = broker.redundancy.power.filter(item => item != 'OK');
+      if (powerArr.length == 0)
+        powerText = `${broker.redundancy.powerConfig} (OK)`;
+      else {
+        powerText = `${broker.redundancy.powerConfig} (<span class="error">Not OK</span>)`;
+        problems.push(["HIGH", "Power Module", `${broker.hostname}'s Power Module(s) is/are not OK`]);
+      }
+    } else
+      powerText = `${broker.redundancy.powerConfig} (unknown status)`;
+  } else
+    powerText = "";
   if (hasProperty(broker.intf, 'vrfMgmt')) {
     if (Object.keys(broker.intf.vrfMgmt).length > 0 && broker.intf.vrfMgmtEnabled)
       vrfMgmt = "Configured & Enabled";
@@ -163,8 +175,8 @@ async function parseBrokerJsonAndDisplay(broker) {
     overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
     addRowToTable("brokerSummaryTableIntf", [broker.hostname, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
   } else {
-    overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Mgmt LAG", "Msg Backbone LAG", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
-    addRowToTable("brokerSummaryTableIntf", [broker.hostname, vrfMgmt, vrfMsg, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
+    overwriteTableHeaders("brokerSummaryTableIntf", ["Hostname", "Power", "Mgmt LAG", "Msg Backbone LAG", "Max Connections", "Max Queue Messages", "Max Spool Usage (MB)", "Msg Spool Status"]);
+    addRowToTable("brokerSummaryTableIntf", [broker.hostname, powerText, vrfMgmt, vrfMsg, broker.scaling.maxConnections, broker.scaling.maxQueueMsg, broker.msgSpool.maxUsage, msgSpoolOpStatus]);
   }
   
   //LAG details

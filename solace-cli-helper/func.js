@@ -6,6 +6,7 @@ let files = {clientDetailData: null, configCliData: null, gatherDiagData: null }
 ///////////////////////////////
 const issueSummaryArray = {
   HIGH: {
+    'Power Module':                   ["Broker's power module(s) are not fully operational.", 'Investigate if power modules are operational or need to be replaced.'],
     'Broker Replication':             ['Broker(s) do not have data replication configured.', 'Configure and enable data replication.'],
     'VPN Authentication':             ['${count} VPN(s) do not have authentication enabled.', 'Enable VPN authentication to prevent unauthorized access.'],
     'VPN Replication':                ['${count} VPN(s) do not have data replication configured.', 'Configure and enable VPN data replication.'],

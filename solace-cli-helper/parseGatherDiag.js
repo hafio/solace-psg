@@ -51,6 +51,11 @@ function processGD(lines, broker = {}) {
         case /^Power redundancy configuration\: /.test(lines[ln]):
           broker.redundancy.powerConfig = _TMP.splice(3).join(" ");
           break;
+        case /^Power module .*\:/.test(lines[ln]):
+          if (!hasProperty(broker.redundancy, 'power'))
+            broker.redundancy.power = [];
+          broker.redundancy.power.push(_TMP[_TMP.length-1]);
+          break;
 // POWER
         case /^Operational power supplies\: /.test(lines[ln]):
           broker.power.operationalSupply = _TMP[3];
