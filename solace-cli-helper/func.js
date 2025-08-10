@@ -1,6 +1,62 @@
 let brokerData = clientData = null;
 let files = {clientDetailData: null, configCliData: null, gatherDiagData: null };
 
+///////////////////////////////
+// REPORT RELATED OPERATIONS //
+///////////////////////////////
+const issueSummaryArray = {
+  HIGH: {
+    'Broker Replication':             ['Broker(s) do not have data replication configured.', 'Configure and enable data replication.'],
+    'VPN Authentication':             ['${count} VPN(s) do not have authentication enabled.', 'Enable VPN authentication to prevent unauthorized access.'],
+    'VPN Replication':                ['${count} VPN(s) do not have data replication configured.', 'Configure and enable VPN data replication.'],
+    'Queue Permissions':              ['${count} queue(s) allow non-owner consumption/modification.', 'Reduce non-owner queue permissions to prevent unauthorized consumption of messages or modification of queue.'],
+    'Queue Owner':                    ['${count} queue(s) do not have owners configured.', 'Define queue owner to ensure clear ownership.'],
+    'Sol OS Version':                 ['Solace OS version is out of support.', 'Get in contact with your Solace consultant team immediately to plan for an upgrade.'],
+    'Topic Endpoint Permissions':     ['${count} topic endpoint(s) allow non-owner consumption/modification.', 'Reduce non-owner topic endpoint permissions to prevent unauthorized consumption of messages or modification of topic endpoint.'],
+    'Topic Endpoint Owner':           ['${count} topic endpoint(s) do not have owners configured.', 'Define queue owner to ensure clear topic endpoint ownership.'],
+    'VRF Management':                 ['VRF Management interface is not configured/enabled', 'Configure and enable VRF Management interface'],
+    'VRF Message Backbone':           ['VRF Message Backbone interface is not configured/enabled', 'Configure and enable VRF Message Backbone interface'],
+  },
+  MEDIUM: {
+    'Sol OS Version':     ['Solace OS will be out of support within 1 year.', 'Solace OS will be out of support within 1 year. Please start planning for an upgrade/refresh.'],
+    'Queue Subscription': ['${count} queue(s) have improper topic subscription configured.', 'Fix topic subscription strings.'],
+  },
+  LOW: {
+    'Config Sync SSL':                        ['Broker(s) config-sync is not SSL-enabled.', 'Enable SSL connection on config sync.'],
+    'VPN Max Connections':                    ['${count} VPN(s) has Max Connections less than sum of all Client Usernames' + "' Client Profile Max Connection.", 'Review configuration value and assign appropriate value based on actual requirements.'],
+    'VPN Max Spool Usage':                    ['${count} VPN(s) are using default Max Egress setting', 'Review configuration value and assign appropriate value based on actual requirements.'],
+    'VPN Max Egress':                         ['${count} VPN(s) are using default Max Egress setting', 'Review configuration value and assign appropriate value based on actual requirements.'],
+    'VPN Max Ingress':                        ['${count} VPN(s) are using default Max Ingress setting', 'Review configuration value and assign appropriate value based on actual requirements.'],
+    'VPN Bridge SSL':                         ['${count} VPN Bridge(s) is/are not SSL-enabled.', 'Enable SSL connection on VPN bridge(s)'],
+    'ACL Profile Default Connect':            ['${count} ACL Profile(s) allow all clients to connect.', 'Consider using a whitelist approach to reduce risk of unauthorized clients.'],
+    'ACL Profile Default Publish':            ['${count} ACL Profile(s) allow clients publish to all topics.','Review and assign appropriate topic exception based on defined topic taxonomy to prevent unauthorized accidental message publication.'],
+    'ACL Profile Default Subscribe':          ['${count} ACL Profile(s) allow clients subscribe to all topics.', 'Review and assign appropriate topic exception based on defined topic taxonomy to prevent unauthorized accidental message subscription.'],
+    'ACL Profile Mapped Client Usernames':    ['${count} ACL Profile(s) has/have no mapped client usernames.', 'Consider removing unmapped ACL profile(s).'],
+    'Client Profile Max Connections':         ['${count} Client Profile(s) has/have default / excess number of connections.',     'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Max SMF Connections':     ['${count} Client Profile(s) has/have default / excess number of SMF connections.', 'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Max Web Connections':     ['${count} Client Profile(s) has/have default / excess number of WEB connections.', 'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Max Egress':              ['${count} Client Profile(s) has/have default / excess number of egress flows per connection.', 'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Max Ingress':             ['${count} Client Profile(s) has/have default / excess number of ingress flows per connection.', 'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Max Transactions':        ['${count} Client Profile(s) has/have default / excess number of allowed transactions per connection.', 'Review configuration value and assign appropriate values based on actual requirements and VPN configured limits.'],
+    'Client Profile Mapped Client Usernames': ['${count} Client Profile(s) has/have no mapped client usernames.', 'Consider removing unmapped client profile(s).'],
+    'Queue Max Spool':                        ['${count} queue(s) have default max spool configured.',          "Review configuration value and assign appropriate values based on actual requirements, other queues' and topics' configuration, and VPN configured limits."],
+    'Queue Bind Count':                       ['${count} queue(s) have default max bind configured.',           "Review configuration value and assign appropriate values based on actual requirements, other queues' and topics' configuration, and VPN configured limits."],
+    'Queue Permissions':                      ['${count} queue(s) allow non-owner read permissions.', "Review requirements and adjust queue permissions to 'no-access' if applicable."],
+    'Topic Endpoint Max Spool':               ['${count} topic endpoint(s) have default max spool configured.', "Review configuration value and assign appropriate values based on actual requirements, other queues' and topics' configuration, and VPN configured limits."],
+    'Topic Endpoint Bind Count':              ['${count} topic endpoint(s) have default max bind configured.',  "Review configuration value and assign appropriate values based on actual requirements, other queues' and topics' configuration, and VPN configured limits."],
+    'Topic Endpoint Permissions':             ['${count} topic endpoint(s) allow non-owner read permissions.', "Review requirements and adjust topic endpoint permissions to 'no-access' if applicable."],
+  }
+};
+function issueSummaryDesc(sev, cat, count) {
+  if (hasProperty(issueSummaryArray, `${sev}.${cat}`))
+    return issueSummaryArray[sev][cat][0].replace('${count}', count);
+  return `${sev} : ${cat} not defined`;
+}
+function issueSummaryReco(sev, cat, count) {
+  if (hasProperty(issueSummaryArray, `${sev}.${cat}`))
+    return issueSummaryArray[sev][cat][1];
+  return `${sev} : ${cat} not defined`;
+}
 
 ///////////////////////
 // STRING OPERATIONS //
@@ -183,6 +239,18 @@ function initializeMainPanel() {
     <button onclick="copyTable(document.getElementById('problemListTableSummary'))">Copy Table</button>
     <span class="row-count" id="problemListTableSummaryRows"></span>
     <table class="summary" id="problemListTableSummary"></table>
+    
+    <a name="issueDesc"><h2>Issue Summary Description</h2></a>
+    <button onclick="copyTable(document.getElementById('problemListTableSummaryDesc'))">Copy Table</button>
+    <span class="row-count" id="problemListTableSummaryDescRows"></span>
+    <table class="summary" id="problemListTableSummaryDesc"></table>
+
+    <a name="issueReco"><h2>Issue Summary Recommendation</h2></a>
+    <button onclick="copyTable(document.getElementById('problemListTableSummaryReco'))">Copy Table</button>
+    <span class="row-count" id="problemListTableSummaryRecoRows"></span>
+    <table class="summary" id="problemListTableSummaryReco"></table>
+
+    
     <div id="brokerSummary">
       <a name="brokerSummary">
         <h1>Broker Summary</h1>
@@ -314,6 +382,8 @@ async function populateProblemTable(domId) {
   for (sev in summary) {
     for (cat in summary[sev]) {
       addRowToTable(domId + "Summary", [sev, cat, summary[sev][cat]]);
+      addRowToTable(domId + "SummaryDesc", [sev, cat, issueSummaryDesc(sev, cat, summary[sev][cat])]);
+      addRowToTable(domId + "SummaryReco", [sev, cat, issueSummaryReco(sev, cat, summary[sev][cat])]);
     }
   }
   document.getElementById("problemListTableRows").textContent += " - done";

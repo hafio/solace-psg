@@ -118,10 +118,12 @@ async function parseBrokerJsonAndDisplay(broker) {
       vrfMgmt = "Configured & Enabled";
     else if (Object.keys(broker.intf.vrfMgmt).length == 0) {
       vrfMgmt = `<span class="warn">Not configured</span>`;
-      problems.push(["HIGH", "VRF Management", "VRF Management interface is not configured."]);
+      if (!/(Enterprise|Standard)/.test(broker.platform))
+        problems.push(["HIGH", "VRF Management", "VRF Management interface is not configured."]);
     } else if (!broker.intf.vrfMgmtEnabled) {
       vrfMgmt = `<span class="warn">Not enabled</span>`;
-      problems.push(["HIGH", "VRF Management", "VRF Management is not enabled."]);
+      if (!/(Enterprise|Standard)/.test(broker.platform))
+        problems.push(["HIGH", "VRF Management", "VRF Management is not enabled."]);
     }
     for (let vrf of Object.keys(broker.intf.vrfMgmt)) {
       vrfMgmtDetails += `${vrf}: ${broker.intf.vrfMgmt[vrf].ipAddress}<br/>`;
@@ -134,10 +136,12 @@ async function parseBrokerJsonAndDisplay(broker) {
       vrfMsg = "Configured & Enabled";
     else if (Object.keys(broker.intf.vrfMsg).length == 0) {
       vrfMsg = `<span class="warn">Not configured</span>`;
-      problems.push(["HIGH", "VRF Message Backbone", "VRF Message Backbone interface is not configured."]);
+      if (/(Enterprise|Standard)/.test(broker.platform))
+        problems.push(["HIGH", "VRF Message Backbone", "VRF Message Backbone interface is not configured."]);
     } else if (!broker.intf.vrfMsgEnabled) {
       vrfMsg = `<span class="warn">Not enabled</span>`;
-      problems.push(["HIGH", "VRF Message Backbone", "VRF Message Backbone is not enabled."]);
+      if (/(Enterprise|Standard)/.test(broker.platform))
+        problems.push(["HIGH", "VRF Message Backbone", "VRF Message Backbone is not enabled."]);
     }
     for (let vrf of Object.keys(broker.intf.vrfMsg)) {
       vrfMsgDetails += `${vrf}: ${broker.intf.vrfMsg[vrf].ipAddress}<br/>`;
@@ -312,21 +316,21 @@ async function parseBrokerJsonAndDisplay(broker) {
     ]);
     addRowToTable("vpnServicesTable", [
       vpn,
-      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.plainEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.sslEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.web.plainEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.web.sslEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.plainEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.sslEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.plainEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.smf.sslEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.web.plainEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.web.sslEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.plainEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.amqp.sslEnabled", "Enabled", `<span class="gray">Disabled</span>`),
     ]);
     addRowToTable("vpnServices2Table", [
       vpn,
-      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.plainEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.sslEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wsEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wssEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingPlainEnabled"),
-      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingSslEnabled"),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.plainEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.sslEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wsEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.mqtt.wssEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingPlainEnabled", "Enabled", `<span class="gray">Disabled</span>`),
+      enabledOrDisabled(broker.vpn, vpn + ".svc.rest.incomingSslEnabled", "Enabled", `<span class="gray">Disabled</span>`),
     ]);
     addRowToTable("vpnCountSummaryTable", [
       vpn,
@@ -719,6 +723,8 @@ async function parseBrokerJsonAndDisplay(broker) {
   addEventTime("PROBLEMS", broker);
   overwriteTableHeaders("problemListTable", ["Severity", "Area", "Description"]);
   overwriteTableHeaders("problemListTableSummary", ["Severity", "Area", "Count"]);
+  overwriteTableHeaders("problemListTableSummaryDesc", ["Severity", "Area", "Description"]);
+  overwriteTableHeaders("problemListTableSummaryReco", ["Severity", "Area", "Recommendation"]);
   //for (problem of problems) {
   //  addRowToTable("problemListTable", problem);
   //}

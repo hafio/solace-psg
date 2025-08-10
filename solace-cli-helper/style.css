@@ -149,19 +149,22 @@ span.error {
   color: red;
   font-weight: bold;
 }
+span.gray {
+  color: var(--mid-lite-gray);
+}
 span.lines {
   font-size: 0.7em;
   font-weight: normal;
-}
-span.warn {
-  color: orange;
-  font-weight: bold;
 }
 span.row-count {
   color: var(--sol-dark-blue);
   font-family: monospace;
   font-size: 0.8em;
   margin-left: 10px;
+}
+span.warn {
+  color: orange;
+  font-weight: bold;
 }
 table {
   border-collapse: collapse;

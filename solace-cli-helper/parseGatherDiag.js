@@ -200,11 +200,12 @@ function processGD(lines, broker = {}) {
             else if (lines[ln].startsWith("Mounted On"))
               mount = _TMP[_TMP.length-1];
             else if (/^\s+ Name \s+: /.test(lines[ln]))
-              mount = _TMP[3];
+              mount = _TMP[2];
             else if (lines[ln].startsWith("Size (1K-blocks)"))
               size = `${_TMP[3]} ` + storageUnitMapping[_TMP[4]];
-            else if (/size/.test(lines[ln]))
+            else if (/^\s+ Size \s+\: /.test(lines[ln])) {
               size = `${_TMP[2]} ` + storageUnitMapping[_TMP[3]];
+            }
           }
           break;
         case /^Storage Devices/.test(lines[ln]):
@@ -215,8 +216,9 @@ function processGD(lines, broker = {}) {
             _TMP = cleanArr(lines[ln]);
             switch (true) {
               case /contains\: /.test(lines[ln]):
-                if (_TMP[1] == "spool")
+                if (_TMP[1] == "spool") {
                   broker.msgSpool.diskMount = storage;
+                }
                 contains.push(_TMP.splice(1).join(" "));
                 break;
               default:
