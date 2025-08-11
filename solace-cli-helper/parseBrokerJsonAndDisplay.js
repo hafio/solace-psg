@@ -15,7 +15,7 @@ const osSupportDateVersion = {
   "10.25.0": new Date(2027, 05, 30)
 };
 function getTechnicalSupportDate(version) {
-  versionParts = version.split(".")
+  versionParts = version.split(".");
   if (versionParts.length < 3)
     throw new Error("Invalid version provided " + version);
   version = versionParts.splice(0,3).join(".");
