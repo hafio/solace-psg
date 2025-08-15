@@ -1,0 +1,42 @@
+<html>
+<button onclick="createSyslogTable()">Create Table</button>
+<button onclick="copyTable(document.getElementById('syslogTable'))">Copy Table</button>
+<table id="syslogTable"></table>
+
+<script>
+function copyTable(table) {
+  let rng = document.createRange();
+  rng.selectNode(table)
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(rng);
+  document.execCommand("copy");
+  sel.removeAllRanges();
+}
+function addRowToTable(tableId, cellArr) {
+  bodyDom = document.getElementById(tableId);
+  row = document.createElement("tr");
+  for (cell of cellArr) {
+    tcell = document.createElement("td");
+    tcell.innerHTML = cell;
+    row.appendChild(tcell);
+  }
+  bodyDom.appendChild(row);
+  rowCountId = bodyDom.parentElement.id + "Rows"
+  if (document.getElementById(rowCountId) != null)
+    document.getElementById(rowCountId).textContent = bodyDom.children.length + " rows";
+}
+function createSyslogTable() {
+  document.getElementById("syslogTable").innerHTML = "<tr><th>Syslog Event</th><th>Severity</th><th>Description</th><th>Sample</th></tr>";
+  events = document.querySelectorAll("div.event_outer_div");
+  for (let event of events) {
+    addRowToTable('syslogTable', [
+      event.querySelector("h3").textContent,
+      event.querySelector("div.event_severity").textContent,
+      event.querySelector("div.event_description").textContent,
+      event.querySelector("div.event_more_info_value").innerHTML,
+    ]);
+  }
+ }
+</script>
+</html>
