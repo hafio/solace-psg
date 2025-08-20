@@ -4,26 +4,31 @@ let files = {clientDetailData: null, configCliData: null, gatherDiagData: null }
 ///////////////////////////////
 // REPORT RELATED OPERATIONS //
 ///////////////////////////////
-const issueSummaryArray = {
+// <SEVERITY>: <AREA> : [<ISSUE DESCRIPTION>, <RECOMMENDED NEXT STEPS>]
+const issueSummaryArray = { 
   HIGH: {
-    'Power Module':                   ["Broker's power module(s) are not fully operational.", 'Investigate if power modules are operational or need to be replaced.'],
-    'Broker Replication':             ['Broker(s) do not have data replication configured.', 'Configure and enable data replication.'],
-    'VPN Authentication':             ['${count} VPN(s) do not have authentication enabled.', 'Enable VPN authentication to prevent unauthorized access.'],
-    'VPN Replication':                ['${count} VPN(s) do not have data replication configured.', 'Configure and enable VPN data replication.'],
-    'Queue Permissions':              ['${count} queue(s) allow non-owner consumption/modification.', 'Reduce non-owner queue permissions to prevent unauthorized consumption of messages or modification of queue.'],
-    'Queue Owner':                    ['${count} queue(s) do not have owners configured.', 'Define queue owner to ensure clear ownership.'],
-    'Sol OS Version':                 ['Solace OS version is out of support.', 'Get in contact with your Solace consultant team immediately to plan for an upgrade.'],
-    'Topic Endpoint Permissions':     ['${count} topic endpoint(s) allow non-owner consumption/modification.', 'Reduce non-owner topic endpoint permissions to prevent unauthorized consumption of messages or modification of topic endpoint.'],
-    'Topic Endpoint Owner':           ['${count} topic endpoint(s) do not have owners configured.', 'Define queue owner to ensure clear topic endpoint ownership.'],
-    'VRF Management':                 ['VRF Management interface is not configured/enabled', 'Configure and enable VRF Management interface'],
-    'VRF Message Backbone':           ['VRF Message Backbone interface is not configured/enabled', 'Configure and enable VRF Message Backbone interface'],
+    'Power Module':                         ["Broker's power module(s) are not fully operational.", 'Investigate if power modules are operational or need to be replaced.'],
+    'Broker Replication':                   ['Broker(s) do not have data replication configured.', 'Configure and enable data replication.'],
+    'VPN Authentication':                   ['${count} VPN(s) do not have authentication enabled.', 'Enable VPN authentication to prevent unauthorized access.'],
+    'VPN Replication':                      ['${count} VPN(s) do not have data replication configured.', 'Configure and enable VPN data replication.'],
+    'Queue Permissions':                    ['${count} queue(s) allow non-owner consumption/modification.', 'Reduce non-owner queue permissions to prevent unauthorized consumption of messages or modification of queue.'],
+    'Queue Owner':                          ['${count} queue(s) do not have owners configured.', 'Define queue owner to ensure clear ownership.'],
+    'Sol OS Version':                       ['Solace OS version is out of support.', 'Get in contact with your Solace consultant team immediately to plan for an upgrade.'],
+    'Topic Endpoint Permissions':           ['${count} topic endpoint(s) allow non-owner consumption/modification.', 'Reduce non-owner topic endpoint permissions to prevent unauthorized consumption of messages or modification of topic endpoint.'],
+    'Topic Endpoint Owner':                 ['${count} topic endpoint(s) do not have owners configured.', 'Define queue owner to ensure clear topic endpoint ownership.'],
+    'VRF Management':                       ['VRF Management interface is not configured/enabled', 'Configure and enable VRF Management interface'],
+    'VRF Message Backbone':                 ['VRF Message Backbone interface is not configured/enabled', 'Configure and enable VRF Message Backbone interface'],
+    'Server Certificate Validity Period':   ['Service certificate is not within valid time period.', 'Reissue server certificate with valid time period immediately.'],
   },
   MEDIUM: {
-    'Sol OS Version':     ['Solace OS will be out of support within 1 year.', 'Solace OS will be out of support within 1 year. Please start planning for an upgrade/refresh.'],
-    'Queue Subscription': ['${count} queue(s) have improper topic subscription configured.', 'Fix topic subscription strings.'],
+    'Sol OS Version':                       ['Solace OS will be out of support within 1 year.', 'Please start planning for an SolOS upgrade/refresh.'],
+    'Queue Subscription':                   ['${count} queue(s) have improper topic subscription configured.', 'Fix topic subscription strings.'],
+    'Server Certificate Validity Period':   ['Service certificate is nearing expiry.', 'Plan to reissue new server certificate soon.'],
   },
   LOW: {
     'Config Sync SSL':                        ['Broker(s) config-sync is not SSL-enabled.', 'Enable SSL connection on config sync.'],
+    'Broker Replication SSL':                 ['Broker Replication is not SSL-enabled', 'Enable SSL connection for Broker Replication.'],
+    'Server Certificate Validity Period':     ['Service certificate is expiring within a year.', 'Plan to reissue server certificate.'],
     'VPN Max Connections':                    ['${count} VPN(s) has Max Connections less than sum of all Client Usernames' + "' Client Profile Max Connection.", 'Review configuration value and assign appropriate value based on actual requirements.'],
     'VPN Max Spool Usage':                    ['${count} VPN(s) are using default Max Egress setting', 'Review configuration value and assign appropriate value based on actual requirements.'],
     'VPN Max Egress':                         ['${count} VPN(s) are using default Max Egress setting', 'Review configuration value and assign appropriate value based on actual requirements.'],
@@ -51,12 +56,12 @@ const issueSummaryArray = {
 function issueSummaryDesc(sev, cat, count) {
   if (hasProperty(issueSummaryArray, `${sev}.${cat}`))
     return issueSummaryArray[sev][cat][0].replace('${count}', count);
-  return `${sev} : ${cat} not defined`;
+  return `(${sev} : ${cat}) Issue Description not defined`;
 }
 function issueSummaryReco(sev, cat, count) {
   if (hasProperty(issueSummaryArray, `${sev}.${cat}`))
     return issueSummaryArray[sev][cat][1];
-  return `${sev} : ${cat} not defined`;
+  return `(${sev} : ${cat}) Issue Resolution not defined`;
 }
 
 ///////////////////////
@@ -273,6 +278,11 @@ function initializeMainPanel() {
 
       <button onclick="copyTableBody(document.getElementById('brokerSummaryTableRep'))">Copy Table Body</button>
       <table class="summary" id="brokerSummaryTableRep"></table>
+      
+      <button onclick="copyTableBody(document.getElementById('brokerSummaryTableCert'))">Copy Table Body</button>
+      <table class="summary" id="brokerSummaryTableCert"></table>
+      
+      
     </div>
     <div id="vpnSummary">
       <a name="vpnSummary"><h1>VPN Summary</h1></a>
@@ -559,15 +569,6 @@ function compareVersions(v1, v2) {
     if (num1 < num2) return -1;
   }
   return 0;
-}
-
-function getOverflownLines(lineNum, lines) {
-  let text = "";
-  // lineNum should be the same line as the field e.g. line 0
-  while (lines[++lineNum].startsWith(" ")) {
-    text += lines[lineNum].trim();
-  }
-  return { lineNum: --lineNum, text: text, }
 }
 
 function hasProperty(obj, path) {

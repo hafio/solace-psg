@@ -24,15 +24,15 @@ function getTechnicalSupportDate(version) {
 }
 function checkDateAfterRange(date, year = 0, month = 0, day = 0) {
   // check if the date provided is after today + difference
-  dt = new Date();
-  dtYear = dt.getFullYear() + year, dtMonth = dt.getMonth() + month, dtDay = dt.getDate() + day;
+  let dt = new Date();
+  let dtYear = dt.getFullYear() + year, dtMonth = dt.getMonth() + month, dtDay = dt.getDate() + day;
   dt = new Date(dtYear, dtMonth, dtDay);
   return (date > dt);
 }
 function checkDateBeforeRange(date, year = 0, month = 0, day = 0) {
-  // check if the date provided is after today + difference
-  dt = new Date();
-  dtYear = dt.getFullYear() - year, dtMonth = dt.getMonth() - month, dtDay = dt.getDate() - day;
+  // check if the date provided is before today - difference
+  let dt = new Date();
+  let dtYear = dt.getFullYear() - year, dtMonth = dt.getMonth() - month, dtDay = dt.getDate() - day;
   dt = new Date(dtYear, dtMonth, dtDay);
   return (date < dt);
 }
@@ -230,15 +230,56 @@ async function parseBrokerJsonAndDisplay(broker) {
   } else {
     datRepStatus = broker.replication.state;
   }
-  if (broker.replication.sslEnabled)
-    datRepSsl = "Enabled";
-  else {
-    datRepSsl =`<span class="warn">Disabled</span>`;
-    problems.push(["LOW", "Broker Replication SSL", "Broker does not have SSL Data Replication."]);
-  }
+  if (hasProperty(broker.replication, "sslEnabled")) {
+    if (broker.replication.sslEnabled)
+      datRepSsl = "Enabled";
+    else {
+      datRepSsl =`<span class="warn">Disabled</span>`;
+      problems.push(["LOW", "Broker Replication SSL", "Broker does not have SSL Data Replication."]);
+    }
+  } else
+    datRepSsl = "";
   
   overwriteTableHeaders("brokerSummaryTableRep", ["Hostname", "Data Replication (DR)", "DR Mate", "DR State", "DR SSL"]);
   addRowToTable("brokerSummaryTableRep", [broker.hostname, datRep, broker.replication.mate, datRepStatus, datRepSsl]);
+  
+  // SSL SERVER CERTIFICATES
+  broker.ssl.validBefore = "2020-01-01T10:20:20";
+  sslCn = sslBefore = sslAfter = "";
+  if (hasProperty(broker.ssl, "commonName"))
+    sslCn = broker.ssl.commonName;
+  if (hasProperty(broker.ssl, "validAfter")) {
+    dt = new Date(broker.ssl.validAfter);
+    if (checkDateBeforeRange(dt))
+      sslAfter = broker.ssl.validAfter.substring(0, 10);
+    else {
+      problems.push(["HIGH", "Server Certificate Validity Period", "Server Certificate has a future valid date."]);
+      sslAfter = `<span class="error">` + broker.ssl.validAfter.substring(0, 10) + `</span>`;
+    }
+  }
+  if (hasProperty(broker.ssl, "validBefore")) {
+    dt = new Date(broker.ssl.validBefore);
+    if (checkDateAfterRange(dt, 1))
+      sslBefore = broker.ssl.validBefore.substring(0, 10);
+    else if (checkDateAfterRange(dt, 0, 3)) {
+      problems.push(["LOW", "Server Certificate Validity Period", "Server Certificate expires in less than 1 year."]);
+      sslBefore = `<span class="warn">` + broker.ssl.validBefore.substring(0, 10) + `</span>`;
+    } else if (checkDateAfterRange(dt)) {
+      problems.push(["MEDIUM", "Server Certificate Validity Period", "Server Certificate expires in less than 3 months."]);
+      sslBefore = `<span class="warn">` + broker.ssl.validBefore.substring(0, 10) + `</span>`;
+    } else {
+      problems.push(["HIGH", "Server Certificate Validity Period", "Server Certificate is expired."]);
+      sslBefore = `<span class="error">` + broker.ssl.validBefore.substring(0, 10) + `</span>`;
+    }
+  }
+  
+  overwriteTableHeaders("brokerSummaryTableCert", ["Hostname", "CN", "Valid From", "Valid Until"]);
+  addRowToTable("brokerSummaryTableCert", [
+    broker.hostname,
+    sslCn,
+    sslAfter,
+    sslBefore,
+  ]);
   
   overwriteTableHeaders("vpnSummaryTable", ["VPN", "State", "Basic Authentication", "Client Certificate", "OAuth2", "Authorization"]);
   overwriteTableHeaders("vpnSummaryReplTable", ["VPN", "Replication (Rep)", "SSL", "Ack Propagation", "Rep Mode", "Reject Msg on Discard"]);
@@ -750,7 +791,7 @@ async function parseClientJsonAndDisplay(client) {
   //client detail list
   addHeaderToDOM("Clients", 1, "mainPanel");
   tblDom = document.createElement("table");
-  overwriteTableHeaders(tblDom, ["VPN", "Client Username", "API", "Version", "IP", "Detail"]);
+  overwriteTableHeaders(tblDom, ["VPN", "Client Username", "API", "Version", "IP", "Platform Detail"]);
   for (api of Object.keys(client)) {
     for (ver of Object.keys(client[api])) {
       for (vpn of Object.keys(client[api][ver])) {

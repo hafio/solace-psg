@@ -511,7 +511,9 @@ function processGD(lines, broker = {}) {
             if (_TMP[0] == "Validity") {
               while (!/^        [a-zA-Z]/.test(lines[++ln])) {
                 let dayNum = lines[ln].substr(28,2).trim();
-                let monthNum = "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(lines[ln].substr(24,3)) / 3 + 1;
+                if (dayNum.length == 1) dayNum = "0" + dayNum;
+                let monthNum = ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(lines[ln].substr(24,3)) / 3 + 1).toString();
+                if (monthNum.length == 1) monthNum = "0" + monthNum.toString();
                 let yearNum = lines[ln].substr(40,4);
                 let time = lines[ln].substr(31,8);
                 if (lines[ln].substr(16,6) == "Before")
@@ -519,8 +521,15 @@ function processGD(lines, broker = {}) {
                 else if (lines[ln].substr(16,5) == "After")
                   broker.ssl.validBefore = `${yearNum}-${monthNum}-${dayNum}T${time}`
               }
+              ln--;
+            } else if (_TMP[0] == "Subject:") {
+              while (/[a-zA-Z]+=.+/.test(lines[++ln])) {
+                if (lines[ln].trim().startsWith("CN="))
+                  broker.ssl.commonName = lines[ln].trim().substring(3);
+              }
+              ln--;
+            } else if (lines[ln].startsWith("Chain depth:"))
               break sslLoop;
-            }
           }
           updateStatus(ln, lines.length, "gatherDiagLinesProcessed");
           break;
