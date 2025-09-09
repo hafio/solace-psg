@@ -574,7 +574,8 @@ function compareVersions(v1, v2) {
 function hasProperty(obj, path) {
   if (!obj || typeof obj !== 'object') return false;
 
-  const keys = Array.isArray(path) ? path : path.split('.');
+  //const keys = Array.isArray(path) ? path : path.split('.');
+  const keys = Array.isArray(path) ? path : path.split(/(?<!\\)\./).map(key => key.replace(/\\\./g, '.'));
 
   for (let key of keys) {
     if (!(key in obj)) return false;

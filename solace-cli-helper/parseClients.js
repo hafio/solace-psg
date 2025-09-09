@@ -101,7 +101,7 @@ function processClients(lines, clients = {}) {
       if (typeof clientName != 'undefined' && clientName != null) { // save previously populated client block
         if (!hasProperty(clients, client.solApi))
           clients[client.solApi] = {};
-        if (!hasProperty(clients[client.solApi], client.softwareVersion))
+        if (!hasProperty(clients[client.solApi], client.softwareVersion.replaceAll('.', '\\.')))
           clients[client.solApi][client.softwareVersion] = {};
         if (!hasProperty(clients[client.solApi][client.softwareVersion], client.msgVpn))
           clients[client.solApi][client.softwareVersion][client.msgVpn] = {};
@@ -111,6 +111,7 @@ function processClients(lines, clients = {}) {
           clients[client.solApi][client.softwareVersion][client.msgVpn][client.username][client.orgIPAddress] = [];
         if (!clients[client.solApi][client.softwareVersion][client.msgVpn][client.username][client.orgIPAddress].includes(client.platform))
           clients[client.solApi][client.softwareVersion][client.msgVpn][client.username][client.orgIPAddress].push(client.platform);
+        clientName = null, client = null;
       }
       ln--;
     }
