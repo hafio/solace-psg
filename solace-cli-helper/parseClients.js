@@ -70,12 +70,16 @@ function processClients(lines, clients = {}) {
               client.platform = lines[ln].substr(30);
               nameObj = getOverflownClientLines(ln, lines);
               ln = nameObj.lineNum, client.platform += nameObj.text;
+              if (client.orgIPAddress == '10.10.181.35')
+                console.log(client.platform);
               if (/JMS ?SDK/.test(client.platform)) {
                 client.solApi = 'JMS';
               } else if (/JCSMP SDK/.test(client.platform)) {
                 client.solApi = 'JCSMP';
-              } else if (/C SDK/.test(client.platform)) {
-                client.solApi = 'C';
+              } else if (/\.NET API/.test(client.platform) && /\.NET API \d+\.\d+\.\d+ \//.test(client.softwareVersion)) {
+                client.solApi = '.NET';
+              } else if (/python/.test(client.platform) && /python.+ \d+\.\d+\.\d+ \//.test(client.softwareVersion)) {
+                client.solApi = 'Python';
               } else if (/JS API/.test(client.platform)) {
                 client.solApi = 'JS';
               } else if (/MQTT Client/i.test(client.platform)) {
@@ -84,6 +88,8 @@ function processClients(lines, clients = {}) {
                 client.solApi = 'AMQP';
               } else if (clientName.startsWith("#rest")) {
                 client.solApi = 'REST';
+              } else if (/C SDK/.test(client.platform)) {
+                client.solApi = 'C';
               } else {
                 client.solApi = 'UNKNOWN';
                 console.log(client);
