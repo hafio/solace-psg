@@ -244,7 +244,6 @@ async function parseBrokerJsonAndDisplay(broker) {
   addRowToTable("brokerSummaryTableRep", [broker.hostname, datRep, broker.replication.mate, datRepStatus, datRepSsl]);
   
   // SSL SERVER CERTIFICATES
-  broker.ssl.validBefore = "2020-01-01T10:20:20";
   sslCn = sslBefore = sslAfter = "";
   if (hasProperty(broker.ssl, "commonName"))
     sslCn = broker.ssl.commonName;

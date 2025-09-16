@@ -1,6 +1,10 @@
 let brokerData = clientData = null;
 let files = {clientDetailData: null, configCliData: null, gatherDiagData: null };
 
+// URL PARAMETERS
+let urlParameters = new URLSearchParams(document.location.search);
+let ignoreHostnameMatch = (urlParameters.get("urlParameters"));
+
 ///////////////////////////////
 // REPORT RELATED OPERATIONS //
 ///////////////////////////////

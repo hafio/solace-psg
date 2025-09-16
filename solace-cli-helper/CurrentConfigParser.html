@@ -71,10 +71,10 @@ function resizeOutputDiv() {
     topOffset = el.offsetTop;
     el.style.height = `calc(100vh - ${topOffset}px - 15px)`;
 }
-function sendToOutput(type, subType, text) {
+function sendToOutput(type, subType, txt, logConsole = false) {
   if (typeof output[type][subType] === 'undefined')
     output[type][subType] = "home\nenable\nconfigure\n\n";
-  output[type][subType] += text;
+  output[type][subType] += txt;
 }
 async function tweakCurrentConfigCLI(input) {
   data = await input.files[0].text();
@@ -84,24 +84,44 @@ async function tweakCurrentConfigCLI(input) {
   lines = data.split(/\r?\n/), ln=-1;
   while (++ln < lines.length) {
     let _TMP = cleanArr(lines[ln]);
+// SYSTEM
+    if (lines[ln].startsWith("! Configure System")) {
+      while (!lines[ln+1].startsWith("! Configure SEMP Service")) {
+        // TODO
+        //sendToOutput("cli", "system", lines[ln] + "\n",);
+      }
 // REDUNDANCY
-    if (lines[ln] == "! Configure Redundancy") {
+    } else if (lines[ln] == "! Configure Redundancy") {
+      while (lines[++ln] != "") {
+        sendToOutput("cli", "redundancy", lines[ln] + "\n");
+      }
+    } else if (lines[ln] == `! Create Redundancy PSK: "#redundancy-group"`) {
       while (lines[++ln] != "") {
         sendToOutput("cli", "redundancy", lines[ln] + "\n");
       }
 // BROKER REPLICATION
     } else if (lines[ln] == "! Configure Replication") {
+      sendToOutput("cli", "replication", "! new broker replication to use PSK instead of basic auth\n");
+      sendToOutput("cli", "replication", "replication config-sync bridge authentication pre-shared-key key TaJdty1bDURi/Zovae7fRygGWnYXlivOtE4WaC02vHAiJSk5p2tLrhsK8BsSFti52s1fjW/i+ZPoqthd2sV+qx6f6BqY4PFHLXiXl6V8JoIhLXUf7AqtHpO9qUGc+SGBapzdFw0pvDGYRJD6RfcMNTxTjq7MFIfz0wP4vZ0XN9GVOn2Za1LFCIimlBNP1YyvTwvKEGnYl6vVSX8pe91mxhV8blgiVFZMsGZQDxV6JtKHCOFz6dViuRxJPkqapQkNnLcyMs0AV7pF7cOI7IRPn27J9A4w7h2SBrf7tghC5F5FBfz+fa6IuRtq9BXjnVyzrxaWFsOluUBfrSSGXKjcvg==\n");
+      sendToOutput("cli", "replication", "no replication config-sync bridge authentication insecure-upgrade-mode\n");
       while (lines[++ln] != "") {
-        sendToOutput("cli", "replication", lines[ln] + "\n");
+        if (
+          lines[ln].startsWith("replication config-sync bridge authentication auth-scheme") ||
+          lines[ln].startsWith("replication config-sync bridge ssl-") || 
+          lines[ln].startsWith("no replication config-sync bridge ssl-")
+          )
+          sendToOutput("cli", "replication", "!" + lines[ln] + "\n");
+        else 
+          sendToOutput("cli", "replication", lines[ln] + "\n");
       }
 // SYSTEM AUTHENTICATION & AUTHORIZATION
     } else if (/^! Create Usernames:/.test(lines[ln])) {
       outputType = 'auth';
 // ADMIN PASSWORD
     } else if (/^create username "admin" /.test(lines[ln])) {
-      sendToOutput("cli", "admin", "username admin\n");
+      sendToOutput("cli", "auth", "username admin\n");
       while (checkCliExitBlock(lines, ++ln, 2))
-        sendToOutput("cli", "admin", lines[ln] + "\n");
+        sendToOutput("cli", "auth", lines[ln] + "\n");
 //
 // VPN SECTION
 //
