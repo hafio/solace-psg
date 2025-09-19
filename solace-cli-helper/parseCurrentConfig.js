@@ -316,13 +316,14 @@ function processCLI(lines, broker = {}) {
         broker.replication.enabled = (_TMP[0] == "no") ? true : false;
         break;
       case /^(no )?replication config-sync bridge/.test(lines[ln]):
-        enable = true;
+        enabled = true;
         if (_TMP[0] == "no") {
-          enable = false;
+          enabled = false;
           _TMP = _TMP.splice(1);
         }
-        if (_TMP[3] == "ssl")
+        if (_TMP[3] == "ssl") {
           broker.replication.sslEnabled = enabled;
+        }
         else if (_TMP[3] == "compressed-data")
           broker.replication.compressedEnabled = enabled;
         break;

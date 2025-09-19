@@ -327,7 +327,8 @@ function processGD(lines, broker = {}) {
             switch (true) {
               case /^Config Status: /.test(lines[ln]):
                 broker.msgSpool.enabled = (_TMP[2] == "Enabled") ? true : false;
-                broker.msgSpool.role = _TMP[3].replace(/[\(\)]/g, "");
+                if (_TMP.length > 3)
+                  broker.msgSpool.role = _TMP[3].replace(/[\(\)]/g, "");
                 break;
               case /^Maximum Spool Usage\:/.test(lines[ln]):
                 broker.msgSpool.maxUsage = _TMP[3];
