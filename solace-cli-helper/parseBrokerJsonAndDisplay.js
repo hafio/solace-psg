@@ -224,6 +224,10 @@ async function parseBrokerJsonAndDisplay(broker) {
     datRep =`<span class="error">Disabled</span>`;
     problems.push(["HIGH", "Broker Replication", "Broker does not have Data Replication."]);
   }
+  let connectVia = [];
+  if (hasProperty(broker.replication, 'connectVia')) connectVia.push("Plain-text: " + broker.replication.connectVia.join(", "));
+  if (hasProperty(broker.replication, 'connectViaSsl')) connectVia.push("SSL: " + broker.replication.connectViaSsl.join(", "));
+  if (hasProperty(broker.replication, 'connectViaCompressed')) connectVia.push("Compressed: " + broker.replication.connectViaCompressed.join(", "));
   if (broker.replication.enabled && broker.msgSpool.operationalStatus == "AD-Active" && broker.replication.state != "up") {
     datRepStatus = `<span class="error">` + capitalizeWord(broker.replication.state) + `</span>`
     problems.push(["HIGH", "Broker Replication", "Broker Data Replication has issue (status != up)."]);
@@ -240,8 +244,16 @@ async function parseBrokerJsonAndDisplay(broker) {
   } else
     datRepSsl = "";
   
-  overwriteTableHeaders("brokerSummaryTableRep", ["Hostname", "Data Replication (DR)", "DR Mate", "DR State", "DR SSL"]);
-  addRowToTable("brokerSummaryTableRep", [broker.hostname, datRep, broker.replication.mate, datRepStatus, datRepSsl]);
+  overwriteTableHeaders("brokerSummaryTableRep", ["Hostname", "Data Replication (DR)", "DR Mate", "Connect Via", "DR State", "DR SSL", "PSK Key (CRC32)"]);
+  addRowToTable("brokerSummaryTableRep", [
+    broker.hostname,
+    datRep,
+    broker.replication.mate,
+    (connectVia.length > 0) ? connectVia.join("<br>") : "(not configured)",
+    datRepStatus,
+    datRepSsl,
+    (hasProperty(broker.replication, 'preSharedKey')) ? crc32(broker.replication.preSharedKey) : "(not configured)",
+  ]);
   
   // SSL SERVER CERTIFICATES
   sslCn = sslBefore = sslAfter = "";

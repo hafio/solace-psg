@@ -277,8 +277,12 @@ function processCLI(lines, broker = {}) {
       case /^hardware power-redundancy/.test(lines[ln]):
         broker.redundancy.powerConfig = _TMP[2];
         break;
-// TODO ADD REPLICATION PSK
 // REPLICATION FOR APPLIANCE
+// TODO VERIFY IF APPLIANCE PORT CAN BE MULTIPLE
+      case /(no )?replication config-sync bridge authentication insecure-upgrade-mode/.test(lines[ln]):
+        broker.replication.insecureUpgradeMode = (_TMP[0] == "no") ? false : true;
+      case /replication config-sync bridge authentication pre-shared-key/.test(lines[ln]):
+        broker.replication.preSharedKey = _TMP[6];
       case /(no )?replication mate connect-port/.test(lines[ln]):
         port = (_TMP[0] == "no") ? "(not configured)" : _TMP[3];
         if (lines[ln].endsWith("ssl"))
@@ -288,18 +292,18 @@ function processCLI(lines, broker = {}) {
         else
           broker.replication.port = port;
         break;
-// REPLICATION FOR SOFTWARE       
+// REPLICATION FOR SOFTWARE
       case /^(no )?replication mate connect-via/.test(lines[ln]):
-        (_TMP[0] == "no") ? url = port = "(not configured)" : [url, port] = _TMP[3].split(":");
-        if (lines[ln].endsWith("ssl")) {
-          broker.replication.connectViaSsl = url;
-          broker.replication.portSsl = port;
-        } else if (lines[ln].endsWith("compressed")) {
-          broker.replication.connectViaCompressed = url;
-          broker.replication.portCompressed = port;
+        let url = (_TMP[0] == "no") ? "(not configured)" : _TMP[3];
+        if (/ssl"?$/.test(lines[ln])) {
+          (hasProperty(broker.replication, "connectViaSsl")) ? broker.replication.connectViaSsl.push(url) : broker.replication.connectViaSsl = [url];
+          //broker.replication.portSsl = port;
+        } else if (/compressed"?$/.test(lines[ln])) {
+          (hasProperty(broker.replication, 'connectViaCompressed')) ? broker.replication.connectViaCompressed.push(url) : broker.replication.connectViaCompressed = [url];
+          //broker.replication.portCompressed = port;
         } else {
-          broker.replication.connectVia = url;
-          broker.replication.port = port;
+          (hasProperty(broker.replication, 'connectVia')) ? broker.replication.connectVia.push(url) : broker.replication.connectVia = [url];
+          //broker.replication.port = port;
         }
         break;
 // REPLICATION FOR BOTH APPLIANCE & SOFTWARE
@@ -308,6 +312,7 @@ function processCLI(lines, broker = {}) {
           broker.replication.mate = "(not configured)";
         } else {
           broker.replication.mate = _TMP[3];
+          // APPLIANCE ONLY
           if (_TMP[4] == "connect-via")
             broker.replication.connectVia = broker.replication.connectViaSsl = broker.replication.connectViaCompressed = _TMP[5];
         }

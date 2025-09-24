@@ -78,6 +78,28 @@ function capitalizeWord(text) {
     return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
 }
 
+function crc32(str) {
+  let crc = 0 ^ (-1);
+
+  for (let i = 0; i < str.length; i++) {
+    crc = (crc >>> 8) ^ table[(crc ^ str.charCodeAt(i)) & 0xff];
+  }
+
+  return (crc ^ (-1)) >>> 0;
+}
+
+const table = (() => {
+  const t = new Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) {
+      c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    }
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+
 function enabledOrDisabled(obj, path, trueVal = "Enabled", falseVal = "Disabled") {
   if (!obj || typeof obj !== 'object') return "(undefined)";
 

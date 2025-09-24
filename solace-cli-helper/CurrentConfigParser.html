@@ -89,6 +89,7 @@ async function tweakCurrentConfigCLI(input) {
       while (!lines[ln+1].startsWith("! Configure SEMP Service")) {
         // TODO
         //sendToOutput("cli", "system", lines[ln] + "\n",);
+        ln++;
       }
 // REDUNDANCY
     } else if (lines[ln] == "! Configure Redundancy") {
@@ -122,6 +123,7 @@ async function tweakCurrentConfigCLI(input) {
       sendToOutput("cli", "auth", "username admin\n");
       while (checkCliExitBlock(lines, ++ln, 2))
         sendToOutput("cli", "auth", lines[ln] + "\n");
+      sendToOutput("cli", "auth", "  exit\n");
 //
 // VPN SECTION
 //
@@ -166,6 +168,7 @@ async function tweakCurrentConfigCLI(input) {
       sendToOutput("cli", "replication", "    exit\n  exit\n");
     } else if (/^create bridge/.test(lines[ln])) {
 // SHUTDOWN BRIDGES
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       while (checkCliExitBlock(lines, ++ln, 2)) {
         if (lines[ln] == "      no shutdown")
           sendToOutput(outputType, vpnName, "      shutdown\n");
@@ -174,25 +177,30 @@ async function tweakCurrentConfigCLI(input) {
         else
           sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       }
+      sendToOutput(outputType, vpnName, "  exit\n");
     } else if (/^client-username "default" message-vpn/.test(lines[ln])) {
 // ADD SHUTDOWN LINE DEFAULT CLIENT USERNAME
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       sendToOutput(outputType, vpnName, "  shutdown\n");
     } else if (/^  (no )?service rest .+ listen-port( [0-9]+)? ssl$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: REST * SSL
-      sendToOutput(outputType, vpnName, `  service rest ${_TMP[2]} ssl shutdown\n`);
+      serviceType = (_TMP[0] == "no") ? _TMP[3] : _TMP[2];
+      sendToOutput(outputType, vpnName, `  service rest ${serviceType} ssl shutdown\n`);
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^  (no )?service rest .+ listen-port( [0-9]+)?$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: REST *
-      sendToOutput(outputType, vpnName, `  service rest ${_TMP[2]} plain-text shutdown\n`);
+      serviceType = (_TMP[0] == "no") ? _TMP[3] : _TMP[2];
+      sendToOutput(outputType, vpnName, `  service rest ${serviceType} plain-text shutdown\n`);
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^  (no )?service .+ listen-port( [0-9]+)? ssl$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
-      sendToOutput(outputType, vpnName, `  service ${_TMP[1]} ssl shutdown\n`);
+      serviceType = (_TMP[0] == "no") ? _TMP[2] : _TMP[1];
+      sendToOutput(outputType, vpnName, `  service ${serviceType} ssl shutdown\n`);
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^  (no )?service .+ listen-port( [0-9]+)?$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: AMQP|MQTT * SSL
-      sendToOutput(outputType, vpnName, `  service ${_TMP[1]} plain-text shutdown\n`);
+      serviceType = (_TMP[0] == "no") ? _TMP[2] : _TMP[1];
+      sendToOutput(outputType, vpnName, `  service ${serviceType} plain-text shutdown\n`);
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^  (no )?service mqtt listen-port( [0-9]+)? (ssl )?web$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: MQTT * SSL? WEB
