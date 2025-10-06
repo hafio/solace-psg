@@ -205,6 +205,9 @@ async function tweakCurrentConfigCLI(input) {
       while (checkCliExitBlock(lines, ++ln, 2)) {
         _TMP = cleanArr(lines[ln]);
         vpnCU[cu] += lines[ln] + "\n";
+        // ADD SHUTDOWN LINE DEFAULT CLIENT USERNAME
+        if (/^client-username "default" message-vpn/.test(lines[ln]))
+          vpnCU[cu] += "  shutdown\n";
         // IDENTIFY BRIDGE CU's CP & ACL
         if (hasProperty(vpnReplicationClient, vpnName +'.client-username') && cu == vpnReplicationClient[vpnName]["client-username"]) {
           if (/acl-profile/.test(lines[ln]))
@@ -291,10 +294,6 @@ async function tweakCurrentConfigCLI(input) {
           sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       }
       sendToOutput(outputType, vpnName, "  exit\n");
-    } else if (/^client-username "default" message-vpn/.test(lines[ln])) {
-// ADD SHUTDOWN LINE DEFAULT CLIENT USERNAME
-      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
-      sendToOutput(outputType, vpnName, "  shutdown\n");
     } else if (/^  (no )?service rest .+ listen-port( [0-9]+)? ssl$/.test(lines[ln])) {
 // ADD SHUTDOWN LINE FOR LISTEN-PORT: REST * SSL
       serviceType = (_TMP[0] == "no") ? _TMP[3] : _TMP[2];
