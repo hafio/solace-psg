@@ -65,20 +65,28 @@ div.output {
 </style>
 <script src="func.js"></script>
 <script>
-let output = { cli: {}, vpn: {}, };
+let output = { cli: {}, vpn: {}, }, lastOut = { cli: {}, vpn: {} };
 function resizeOutputDiv() {
     el = document.getElementById("clioutput");
     topOffset = el.offsetTop;
     el.style.height = `calc(100vh - ${topOffset}px - 15px)`;
 }
 function sendToOutput(type, subType, txt, logConsole = false) {
-  if (typeof output[type][subType] === 'undefined')
+  if (type == "vpn" && subType == "")
+    subType = "default";
+  if (typeof output[type][subType] === 'undefined') {
     output[type][subType] = "home\nenable\nconfigure\n\n";
-  output[type][subType] += txt;
+    lastOut[type][subType] = "";
+  }
+  if (lastOut[type][subType] != txt) {
+    output[type][subType] += txt;
+    lastOut[type][subType] = txt;
+  }
 }
 async function tweakCurrentConfigCLI(input) {
   data = await input.files[0].text();
-  output = { cli: {}, vpn: {}, }, markedSection = {}, vpnName = "";
+  closeVpnSection = false;
+  output = { cli: {}, vpn: {}, }, markedSection = {}, vpnName = "", vpnReplicationClient = {}, vpnACL = {}, vpnCP = {}, vpnCU = {};
   let outputType = "system";
   //data = document.getElementById('clitext').value;
   lines = data.split(/\r?\n/), ln=-1;
@@ -87,19 +95,29 @@ async function tweakCurrentConfigCLI(input) {
 // SYSTEM
     if (lines[ln].startsWith("! Configure System")) {
       while (!lines[ln+1].startsWith("! Configure SEMP Service")) {
-        // TODO
+        // skipping system configuration
         //sendToOutput("cli", "system", lines[ln] + "\n",);
         ln++;
       }
+    } else if (lines[ln].startsWith("config-sync")) {
+      // only capture synchronize username, shutdown, and ssl lines for config-sync
+      if (/synchronize/.test(lines[ln]))
+        sendToOutput("cli", "system", escapeHTML(lines[ln]) + "\n",);
+      else if (/shutdown/.test(lines[ln]))
+        sendToOutput("cli", "system", escapeHTML(lines[ln]) + "\n",);
+      else if (/ssl/.test(lines[ln]))
+        sendToOutput("cli", "system", escapeHTML(lines[ln]) + "\n",);
 // REDUNDANCY
-    } else if (lines[ln] == "! Configure Redundancy") {
-      while (lines[++ln] != "") {
-        sendToOutput("cli", "redundancy", lines[ln] + "\n");
-      }
+    } else if (lines[ln].startsWith("! Configure Redundancy") || lines[ln].startsWith("! Configure Matelink Service")) {
+      sendToOutput("cli", "redundancy", escapeHTML(lines[ln]) + "\n");
+      while (lines[++ln] != "")
+        sendToOutput("cli", "redundancy", escapeHTML(lines[ln]) + "\n");
+      sendToOutput("cli", "redundancy", "\n");
     } else if (lines[ln] == `! Create Redundancy PSK: "#redundancy-group"`) {
-      while (lines[++ln] != "") {
-        sendToOutput("cli", "redundancy", lines[ln] + "\n");
-      }
+      sendToOutput("cli", "redundancy", escapeHTML(lines[ln]) + "\n");
+      while (lines[++ln] != "")
+        sendToOutput("cli", "redundancy", escapeHTML(lines[ln]) + "\n");
+      sendToOutput("cli", "redundancy", "\n");
 // BROKER REPLICATION
     } else if (lines[ln] == "! Configure Replication") {
       sendToOutput("cli", "replication", "! new broker replication to use PSK instead of basic auth\n");
@@ -112,9 +130,12 @@ async function tweakCurrentConfigCLI(input) {
           lines[ln].startsWith("no replication config-sync bridge ssl-")
           )
           sendToOutput("cli", "replication", "!" + lines[ln] + "\n");
+        else if (/connect-via|virtual-router-name/.test(lines[ln]))
+          sendToOutput("cli", "replication", "<a class=\"highlight\">" + escapeHTML(lines[ln]) + "</a>\n");
         else 
-          sendToOutput("cli", "replication", lines[ln] + "\n");
+          sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
       }
+      sendToOutput("cli", "replication", "\n");
 // SYSTEM AUTHENTICATION & AUTHORIZATION
     } else if (/^! Create Usernames:/.test(lines[ln])) {
       outputType = 'auth';
@@ -122,50 +143,142 @@ async function tweakCurrentConfigCLI(input) {
     } else if (/^create username "admin" /.test(lines[ln])) {
       sendToOutput("cli", "auth", "username admin\n");
       while (checkCliExitBlock(lines, ++ln, 2))
-        sendToOutput("cli", "auth", lines[ln] + "\n");
-      sendToOutput("cli", "auth", "  exit\n");
+        sendToOutput("cli", "auth", escapeHTML(lines[ln]) + "\n");
+      sendToOutput("cli", "auth", "  exit\n\n");
 //
 // VPN SECTION
 //
     } else if (/^! Just Create Message Vpn/.test(lines[ln])) {
       outputType = "vpn", markedSection = {}, vpnName = _TMP[5];
-      sendToOutput(outputType, vpnName, lines[ln] + "\n");
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^create client-profile .+ message-vpn /.test(lines[ln])) {
       outputType = "vpn", markedSection = {}, vpnName = _TMP[4];
-      sendToOutput(outputType, vpnName, lines[ln] + "\n");
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
     } else if (/^! Create Message Vpn: "/.test(lines[ln])) {
-// HIGHLIGHT
+// HIGHLIGHT SECTION
       outputType = "vpn", markedSection = {}, vpnName = _TMP[4];
       sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"vpnDetails\">" + escapeHTML(lines[ln]) + "</a>\n");
-    } else if (/^! Create Client Profile: /.test(lines[ln]) && typeof markedSection.clientProfile === 'undefined') {
-      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"clientProfile\">" + escapeHTML(lines[ln]) + "</a>\n");
-      markedSection.clientProfile = true;
     } else if (/^! Create Message Spool: "/.test(lines[ln]) && typeof markedSection.msgSpool === 'undefined') {
       sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"msgSpool\">" + escapeHTML(lines[ln]) + "</a>\n");
       markedSection.msgSpool = true;
     } else if (/^! Create Endpoints: "/.test(lines[ln]) && typeof markedSection.endpoints === 'undefined') {
       sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"endPts\">" + escapeHTML(lines[ln]) + "</a>\n");
       markedSection.endpoints = true;
-    } else if (/^! Create ACL Profile: "/.test(lines[ln]) && typeof markedSection.aclProfile === 'undefined') {
-      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"aclProfile\">" + escapeHTML(lines[ln]) + "</a>\n");
-      markedSection.aclProfile = true;
-    } else if (/^! Create Client Username: "/.test(lines[ln]) && typeof markedSection.clientUsername === 'undefined') {
-      sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"clientUsername\">" + escapeHTML(lines[ln]) + "</a>\n");
-      markedSection.clientUsername = true;
     } else if (/^! Create Bridge: "/.test(lines[ln]) && typeof markedSection.bridge === 'undefined') {
       sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"bridge\">" + escapeHTML(lines[ln]) + "</a>\n");
       markedSection.bridge = true;
     } else if (/^! Create JNDI\: "/.test(lines[ln]) && typeof markedSection.jndi === 'undefined') {
       sendToOutput(outputType, vpnName, "<a class=\"highlight\" name=\"jndi\">" + escapeHTML(lines[ln]) + "</a>\n");
       markedSection.jndi = true;
-    } else if (/^  replication$/.test(lines[ln])) {
-// Message VPN REPLICATION
-      sendToOutput("cli", "replication", `message-vpn ` + escapeHTML(vpnName) + "\n");
+    } else if (/^! Create Client Profile: /.test(lines[ln])) {
+// CP, ACL, CU SECTION EXTRACTED TO SEPARATE VARIABLE AND ADDED LATER AT END OF VPN TO CATER FOR REPLICATION-RELATED PROCESSING
+
+  // CLIENT PROFILE EXTRACTION
+      let cp = _TMP[4];
+      if (typeof markedSection.clientProfile === 'undefined') {
+        sendToOutput(outputType, vpnName, "===CP===\n");
+        markedSection.clientProfile = true;
+      }
+      vpnCP[cp] = lines[ln] + "\n";
+      while (checkCliExitBlock(lines, ++ln, 2))
+        vpnCP[cp] += lines[ln] + "\n";
+      vpnCP[cp] += "  exit" + "\n\n";
+    } else if (/^! Create ACL Profile: "/.test(lines[ln])) {
+  // ACL PROFILE EXTRACTION
+      let acl = _TMP[4];
+      if (typeof markedSection.aclProfile === 'undefined') {
+        sendToOutput(outputType, vpnName, "===ACL===\n");
+        markedSection.aclProfile = true;
+      }
+      vpnACL[acl] = lines[ln] + "\n";
+      while (checkCliExitBlock(lines, ++ln, 2))
+        vpnACL[acl] += lines[ln] + "\n";
+      vpnACL[acl] += "  exit" + "\n\n";
+    } else if (/^! Create Client Username: "/.test(lines[ln])) {
+  // CLIENT USERNAME EXTRACTION
+      let cu = _TMP[4];
+      if (typeof markedSection.clientUsername === 'undefined') {
+        sendToOutput(outputType, vpnName, "===CU===\n");
+        markedSection.clientUsername = true;
+      }
+      vpnCU[cu] = lines[ln] + "\n";
+      while (checkCliExitBlock(lines, ++ln, 2)) {
+        _TMP = cleanArr(lines[ln]);
+        vpnCU[cu] += lines[ln] + "\n";
+        // IDENTIFY BRIDGE CU's CP & ACL
+        if (hasProperty(vpnReplicationClient, vpnName +'.client-username') && cu == vpnReplicationClient[vpnName]["client-username"]) {
+          if (/acl-profile/.test(lines[ln]))
+            vpnReplicationClient[vpnName]["acl-profile"] = _TMP[1];
+          else if (/client-profile/.test(lines[ln]))
+            vpnReplicationClient[vpnName]["client-profile"] = _TMP[1];
+        }
+      }
+      vpnCU[cu] += "  exit" + "\n\n";
+    } else if (/^! Enable Message Vpn\: "/.test(lines[ln])) {
+      closeVpnSection = true;
+// END OF EACH VPN SECTION TO ADD CP, ACL, CU back to VPN SECTION
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    // CLIENT PROFILE
+      // SEND BRIDGE CP TO REPLICATION TAB
+      if (hasProperty(vpnReplicationClient, vpnName + '.client-profile') && hasProperty(vpnCP, vpnReplicationClient[vpnName]['client-profile'])) {
+        if (vpnReplicationClient[vpnName]['client-profile'] != "default")
+          sendToOutput("cli", "replication", `create client-profile "${vpnReplicationClient[vpnName]['client-profile']}" message-vpn "${vpnName}"\n  exit\n\n`);
+        sendToOutput("cli", "replication", vpnCP[vpnReplicationClient[vpnName]['client-profile']]);
+        delete vpnCP[vpnReplicationClient[vpnName]['client-profile']];
+      }
+      _TMP = "";
+      for (cp in vpnCP)
+        _TMP += vpnCP[cp];
+      _TMP = `<a class="highlight" name="clientProfile">! MESSAGE-VPN "${vpnName}" CLIENT PROFILE SECTION</a>\n` + escapeHTML(_TMP);
+      output['vpn'][vpnName] = output['vpn'][vpnName].replace('===CP===', _TMP);
+      // replace ACL without bridge user
+      if (hasProperty(vpnReplicationClient, vpnName + '.acl-profile') && hasProperty(vpnACL, vpnReplicationClient[vpnName]['acl-profile'])) {
+        if (vpnReplicationClient[vpnName]['acl-profile'] != "default")
+          sendToOutput("cli", "replication", `create acl-profile "${vpnReplicationClient[vpnName]['acl-profile']}" message-vpn "${vpnName}"\n  exit\n\n`);
+        sendToOutput("cli", "replication", vpnACL[vpnReplicationClient[vpnName]['acl-profile']]);
+        delete vpnACL[vpnReplicationClient[vpnName]['acl-profile']];
+      }
+      _TMP = "";
+      for (acl in vpnACL)
+        _TMP += vpnACL[acl];
+      _TMP = `<a class="highlight" name="aclProfile">! MESSAGE-VPN "${vpnName}" ACL PROFILE SECTION</a>\n` + escapeHTML(_TMP);
+      output['vpn'][vpnName] = output['vpn'][vpnName].replace('===ACL===', _TMP);
+      // replace CU without bridge user
+      if (hasProperty(vpnReplicationClient, vpnName + '.client-username') && hasProperty(vpnCU, vpnReplicationClient[vpnName]['client-username'])) {
+        sendToOutput("cli", "replication", vpnCU[vpnReplicationClient[vpnName]['client-username']]);
+        delete vpnCU[vpnReplicationClient[vpnName]['client-username']];
+      }
+      _TMP = "";
+      for (cu in vpnCU)
+        _TMP += vpnCU[cu];
+      _TMP = `<a class="highlight" name="clientUsername">! MESSAGE-VPN "${vpnName}" CLIENT USERNAME SECTION</a>\n` + escapeHTML(_TMP);
+      output['vpn'][vpnName] = output['vpn'][vpnName].replace('===CU===', _TMP);
+      //vpnACL = {}, vpnCP = {}, vpnCU = {};
+    } else if (/^  (authentication|authorization)$/.test(lines[ln])) {
+// VPN AUTHENTICATION & AUTHORIZATION SENT TO VPN & REPLICATION TABS
+      sendToOutput("cli", "replication", `message-vpn "` + escapeHTML(vpnName) + "\"\n");
       sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       while (checkCliExitBlock(lines, ++ln, 4)) {
         sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+        sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
       }
-      sendToOutput("cli", "replication", "    exit\n  exit\n");
+      sendToOutput("cli", "replication", "    exit\n  exit\n\n");
+      sendToOutput(outputType, vpnName, "    exit\n");
+    } else if (/^  replication$/.test(lines[ln])) {
+// Message VPN REPLICATION 
+      sendToOutput("cli", "replication", `message-vpn "` + escapeHTML(vpnName) + "\"\n");
+      sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+      
+      // detects username used for VPN replication so can pipe CU, CP, and ACL creation to replication output
+      while (checkCliExitBlock(lines, ++ln, 4)) {
+        if (/^    bridge authentication basic client-username/.test(lines[ln])) {
+          _TMP = cleanArr(lines[ln]);
+          vpnReplicationClient[vpnName] = { "client-username": _TMP[4] };
+        }
+        sendToOutput("cli", "replication", escapeHTML(lines[ln]) + "\n");
+      }
+      sendToOutput("cli", "replication", "    exit\n  exit\n\n");
     } else if (/^create bridge/.test(lines[ln])) {
 // SHUTDOWN BRIDGES
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
@@ -207,9 +320,13 @@ async function tweakCurrentConfigCLI(input) {
       protocol = (_TMP[4] == "ssl") ? "websocket-secure" : "websocket";
       sendToOutput(outputType, vpnName, `  service mqtt ${protocol} shutdown\n`);
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
-    } else if (outputType == "vpn")
+    } else if (outputType == "vpn" && lines[ln] == "  exit" && closeVpnSection) {
+// DETECT END OF VPN SECTION
       sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
-    else 
+      vpnName = "", closeVpnSection = false;
+    } else if (outputType == "vpn" && lines[ln] != lines[ln-1])
+      sendToOutput(outputType, vpnName, escapeHTML(lines[ln]) + "\n");
+    else if (lines[ln] != lines[ln-1])
       sendToOutput("cli", outputType, escapeHTML(lines[ln]) + "\n");
   }
   document.getElementById("buttons").innerHTML = "";
@@ -242,6 +359,8 @@ This scripts is meant to process <code>show current-config all|message-vpn *</co
       - highlights sections (VPN, Client Profile, Message Spool, Endpoints, ACL Profile, Client Username, Bridge, and JNDI)
     - Separates "redundancy" configuration
     - Separates broker & message vpn "replication" configuration
+      - bridge CP, ACL, & CU will be moved to replication tab
+    - Removed deprecated / soon-to-be-deprecated config-sync commands
     - Changes all VPN bridges to be provisioned in "shutdown" state
     - Adds a shutdown line for "default" username in each vpn to allow changes
     - Adds shutdown lines for service listen-port to allow changes
