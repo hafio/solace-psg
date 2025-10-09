@@ -15,7 +15,7 @@ function processGD(lines, broker = {}) {
         case /^Hostname\: /.test(lines[ln]):
           if (typeof broker.hostname === 'undefined')
             broker.hostname = _TMP[1];
-          else if (broker.hostname != _TMP[1] && ignoreHostnameMatch) {
+          else if (broker.hostname != _TMP[1] && ignoreHostnameMatch != 'true') {
             initializeMainPanel();
             document.getElementById("hostnamePanel").textContent = "Hostname do not match";
             document.getElementById("hostnamePanel").classList.remove("no-display");

@@ -3,7 +3,7 @@ let files = {clientDetailData: null, configCliData: null, gatherDiagData: null }
 
 // URL PARAMETERS
 let urlParameters = new URLSearchParams(document.location.search);
-let ignoreHostnameMatch = (urlParameters.get("urlParameters"));
+let ignoreHostnameMatch = (urlParameters.get("ignoreHostnameMatch"));
 
 ///////////////////////////////
 // REPORT RELATED OPERATIONS //
