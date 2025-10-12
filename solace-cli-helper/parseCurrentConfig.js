@@ -314,7 +314,7 @@ function processCLI(lines, broker = {}) {
           broker.replication.mate = _TMP[3];
           // APPLIANCE ONLY
           if (_TMP[4] == "connect-via")
-            broker.replication.connectVia = broker.replication.connectViaSsl = broker.replication.connectViaCompressed = _TMP[5];
+            broker.replication.connectVia = broker.replication.connectViaSsl = broker.replication.connectViaCompressed = [_TMP[5]];
         }
         break;
       case /^(no )?replication config-sync bridge shutdown/.test(lines[ln]):
