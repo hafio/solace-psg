@@ -256,7 +256,7 @@ async function tweakCurrentConfigCLI(input) {
         _TMP += vpnCU[cu];
       _TMP = `<a class="highlight" name="clientUsername">! MESSAGE-VPN "${vpnName}" CLIENT USERNAME SECTION</a>\n` + escapeHTML(_TMP);
       output['vpn'][vpnName] = output['vpn'][vpnName].replace('===CU===', _TMP);
-      //vpnACL = {}, vpnCP = {}, vpnCU = {};
+      vpnACL = {}, vpnCP = {}, vpnCU = {};
     } else if (/^  (authentication|authorization)$/.test(lines[ln])) {
 // VPN AUTHENTICATION & AUTHORIZATION SENT TO VPN & REPLICATION TABS
       sendToOutput("cli", "replication", `message-vpn "` + escapeHTML(vpnName) + "\"\n");
