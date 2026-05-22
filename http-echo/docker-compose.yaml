@@ -1,0 +1,12 @@
+name: proj-http-echo
+services:
+  http-echo:
+    image: mendhak/http-https-echo:34
+    hostname: http-echo
+    container_name: http-echo
+    ports:
+    - '18080:8080'
+    - '18443:8443'
+    volumes:
+    - ./tls.crt:/app/fullchain.pem:ro
+    - ./tls.key:/app/privkey.pem:ro
