@@ -1,0 +1,37 @@
+# gen-cert configuration.
+# Run:  ./gen-cert.sh -c cert-config.yaml
+# Any field you omit falls back to the script's built-in default.
+# Keys are always ECDSA.
+
+algorithm:
+  ec_curve: P-521      # P-256 | P-384 | P-521 (strongest; default)
+
+ca:
+  generate: true       # true = create a new CA; false = reuse existing <file_prefix>.crt/.key
+  file_prefix: CA      # -> CA.key / CA.crt (and CA.pass if password set)
+  days: 3650
+  password: ""         # empty = key left unencrypted
+  subject:
+    common_name: "CA Authority"
+    country: SG
+    state: ""
+    locality: Singapore
+    organization: "CA Organization"
+    org_unit: IT
+    email: ""
+#  san:                 # optional for a CA; entries may be hostnames or IPs
+
+server:
+  file_prefix: server  # -> server.key / server.csr / server.crt
+  days: 365            # keep leaf certs short-lived
+  password: ""
+  subject:
+    common_name: common_name
+    country: SG
+    state: ""
+    locality: Singapore
+    organization: 
+    org_unit: 
+    uid: 
+    email:
+#  san:                 # hostnames or IPs; DNS:/IP: prefix added automatically
