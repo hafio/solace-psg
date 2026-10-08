@@ -12,7 +12,7 @@ if [[ ! -f "$2" ]]; then
 	[[ -n "${out}" ]] && out+="\n"
 	out+="Root file $2 not found"
 fi
-if [[ -n "$3" ]] && [[ -f "$3" ]]; then
+if [[ -n "$3" ]] && [[ ! -f "$3" ]]; then
 	out+="Intermediate file $3 not found"
 fi
 if [[ -z "$out" ]]; then
