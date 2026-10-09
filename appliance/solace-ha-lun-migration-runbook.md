@@ -6,9 +6,61 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Stage 1 — Pre-Replacement](#stage-1--pre-replacement)
+  - [1.1 — Back Up Broker Configuration](#11--back-up-broker-configuration)
+  - [1.2 — Verify Initial HA State](#12--verify-initial-ha-state)
+  - [1.3 — Provide HBA WWNs to Storage Team](#13--provide-hba-wwns-to-storage-team)
+  - [1.4 — Detect New LUN on Both Appliances](#14--detect-new-lun-on-both-appliances)
+  - [1.5 — Confirm New LUN Visibility on Both Appliances](#15--confirm-new-lun-visibility-on-both-appliances)
+  - [1.6 — Partition and Create Filesystem (Primary Only)](#16--partition-and-create-filesystem-primary-only)
+  - [1.7 — Restart the Backup Appliance ⚠️](#17--restart-the-backup-appliance-)
+  - [1.8 — Verify Config-Sync is Up on Both Appliances](#18--verify-config-sync-is-up-on-both-appliances)
+  - [1.9 — (If Replication Enabled) Disable Reject-Msg-to-Sender on Replication Queue](#19--if-replication-enabled-disable-reject-msg-to-sender-on-replication-queue)
+- [Stage 2 — Replacement (Change Window)](#stage-2--replacement-change-window)
+  - [2.1 — Stop Inbound Messages / Disable Bridges](#21--stop-inbound-messages--disable-bridges)
+  - [2.2 — Verify Upstream Bridge State](#22--verify-upstream-bridge-state)
+  - [2.3 — Wait for Queues to Drain](#23--wait-for-queues-to-drain)
+  - [2.4 — Shutdown msg-backbone (Backup First, Then Primary)](#24--shutdown-msg-backbone-backup-first-then-primary)
+  - [2.5 — Verify Primary Spool State and Defragmentation](#25--verify-primary-spool-state-and-defragmentation)
+  - [2.6 — Shutdown Message Spool (Primary First, Then Backup)](#26--shutdown-message-spool-primary-first-then-backup)
+  - [2.7 — LUN Data Handling — Choose Option A or Option B](#27--lun-data-handling--choose-option-a-or-option-b)
+    - [Option A — Migrate Data (Preserve Messages)](#-option-a--migrate-data-preserve-messages)
+    - [Option B — Fresh Start (Drop All Messages)](#-option-b--fresh-start-drop-all-messages)
+  - [2.8 — Configure New LUN WWN on Both Appliances](#28--configure-new-lun-wwn-on-both-appliances)
+  - [2.9 — Re-enable Message Spool](#29--re-enable-message-spool)
+  - [2.10 — Re-enable msg-backbone (Primary First, Then Backup)](#210--re-enable-msg-backbone-primary-first-then-backup)
+  - [2.11 — Verify Config-Sync](#211--verify-config-sync)
+  - [2.12 — (If Replication Enabled) Re-enable Reject-Msg-to-Sender on Replication Queue](#212--if-replication-enabled-re-enable-reject-msg-to-sender-on-replication-queue)
+  - [2.13 — (Optional) Update Max Spool Usage](#213--optional-update-max-spool-usage)
+  - [2.14 — Re-enable Inbound Messages / Bridges](#214--re-enable-inbound-messages--bridges)
+  - [2.15 — Verify Bridges and Messaging](#215--verify-bridges-and-messaging)
+- [Stage 3 — Post-Replacement](#stage-3--post-replacement)
+  - [3.1 — Remove Old LUN from Both Appliances](#31--remove-old-lun-from-both-appliances)
+  - [3.2 — Confirm Old LUN No Longer Visible](#32--confirm-old-lun-no-longer-visible)
+  - [3.3 — Final Verification](#33--final-verification)
+- [Stage 4 — Rollback](#stage-4--rollback)
+  - [4.1 — Revert to Old LUN WWN](#41--revert-to-old-lun-wwn)
+  - [4.2 — Re-enable Message Spool](#42--re-enable-message-spool)
+  - [4.3 — Re-enable msg-backbone](#43--re-enable-msg-backbone)
+  - [4.4 — Re-enable Inbound Messages / Bridges](#44--re-enable-inbound-messages--bridges)
+  - [4.5 — Verify Bridges and Messaging](#45--verify-bridges-and-messaging)
+- [Key Notes and Common Pitfalls](#key-notes-and-common-pitfalls)
+
+---
+
 ## Overview
 
-This runbook describes the end-to-end procedure for replacing a SAN LUN on a Solace HA appliance pair while preserving spooled Guaranteed Messages. The procedure is divided into four stages:
+This runbook describes the end-to-end procedure for replacing a SAN LUN on a Solace HA appliance pair. Two options are available for Step 2.7:
+
+| Option | Description | Message Impact |
+|---|---|---|
+| **Option A — Migrate Data** | Copy all spool data from old LUN to new LUN | ✅ All spooled messages preserved |
+| **Option B — Fresh Start** | Skip data copy; reset spool on new LUN | ❌ All spooled messages discarded |
+
+The procedure is divided into four stages:
 
 | Stage | Description |
 |---|---|
@@ -154,7 +206,7 @@ solace> show replication details
 solace> show message-vpn * replication
 ```
 
-Disable reject-msg-to-sender-on-discard on the primary appliance for each replicated VPN:
+Disable reject-msg-to-sender-on-discard on the **primary** appliance for each replicated VPN:
 ```
 solace> enable
 solace# configure
@@ -182,6 +234,8 @@ Confirm that upstream bridges show `Incoming Up` (i.e. the upstream side is stil
 ### 2.3 — Wait for Queues to Drain
 
 Monitor queues and wait until all messages have drained before proceeding.
+
+> **Note:** If using Option B (Fresh Start / drop all messages), draining is not strictly required but is still recommended to minimise disruption to consuming applications.
 
 ---
 
@@ -251,9 +305,13 @@ solace-backup(configure)# end
 
 ---
 
-### 2.7 — Migrate LUN Data (Primary Appliance Only)
+### 2.7 — LUN Data Handling — Choose Option A or Option B
 
-> **Note:** This step preserves all spooled Guaranteed Messages. If messages do not need to be preserved, skip to Step 2.8 and perform a spool reset after configuring the new LUN WWN.
+---
+
+#### ✅ Option A — Migrate Data (Preserve Messages)
+
+Use this option if you need to **retain all spooled Guaranteed Messages** on the new LUN.
 
 On the **primary** appliance, enter the shell:
 
@@ -269,7 +327,7 @@ Elevate to root:
 Password: <root or sysadmin password>
 ```
 
-#### Migrate AD Keys (p1 and p2)
+**Migrate AD Keys (p1 and p2):**
 
 ```bash
 [root@solace-primary ~]# adkey-tool migrate \
@@ -283,7 +341,7 @@ Password: <root or sysadmin password>
 
 > **Note:** The LUN WWN may be prefixed with `3` in `/dev/mapper/`. For example, WWN `60:01:40:57:d2:4f:4b:77:...` appears as `/dev/mapper/360014057d24f4b77...p1`.
 
-#### Create Temporary Mount Directories
+**Create Temporary Mount Directories:**
 
 ```bash
 [root@solace-primary ~]# mkdir -p /tmp/old_lun_p1
@@ -292,7 +350,7 @@ Password: <root or sysadmin password>
 [root@solace-primary ~]# mkdir -p /tmp/new_lun_p2
 ```
 
-#### Mount Old and New LUN Partitions
+**Mount Old and New LUN Partitions:**
 
 ```bash
 [root@solace-primary ~]# mount /dev/mapper/<old LUN wwn>p1 /tmp/old_lun_p1
@@ -301,14 +359,14 @@ Password: <root or sysadmin password>
 [root@solace-primary ~]# mount /dev/mapper/<new LUN wwn>p2 /tmp/new_lun_p2
 ```
 
-#### Copy Spool Data from Old LUN to New LUN
+**Copy Spool Data from Old LUN to New LUN:**
 
 ```bash
 [root@solace-primary ~]# cp -a /tmp/old_lun_p1/* /tmp/new_lun_p1/
 [root@solace-primary ~]# cp -a /tmp/old_lun_p2/* /tmp/new_lun_p2/
 ```
 
-#### Unmount All Partitions
+**Unmount All Partitions:**
 
 ```bash
 [root@solace-primary ~]# umount /tmp/old_lun_p1
@@ -317,12 +375,24 @@ Password: <root or sysadmin password>
 [root@solace-primary ~]# umount /tmp/new_lun_p2
 ```
 
-#### Return to CLI
+**Return to CLI:**
 
 ```bash
 [root@solace-primary ~]# exit
 [support@solace-primary ~]$ exit
 ```
+
+Proceed to **Step 2.8**.
+
+---
+
+#### ❌ Option B — Fresh Start (Drop All Messages)
+
+Use this option if you **do not need to preserve spooled messages** and want to start fresh on the new LUN. This skips the shell-level data migration entirely.
+
+> ⚠️ **All currently spooled Guaranteed Messages will be permanently discarded.** Ensure this is agreed upon with application teams before proceeding.
+
+No shell-level action required. Proceed directly to **Step 2.8**, then follow the Option B note in **Step 2.9** to perform the spool reset before re-enabling the spool.
 
 ---
 
@@ -350,6 +420,15 @@ Do you want to continue (y/n)? y
 ---
 
 ### 2.9 — Re-enable Message Spool
+
+> **Option B users only — perform spool reset on primary BEFORE re-enabling:**
+> ```
+> solace-primary# admin
+> solace-primary(admin)# system message-spool
+> solace-primary(admin/system/message-spool)# reset
+> solace-primary(admin/system/message-spool)# end
+> ```
+> The `reset` command deletes all spooled messages and reinitialises the spool on the new LUN. It does **not** affect broker configuration (queues, VPNs, client profiles etc. are preserved). Use `reset full` to also reset message IDs back to 1.
 
 On the **primary** appliance:
 ```
@@ -555,9 +634,10 @@ Confirm bridge status is restored and messaging is functioning correctly.
 | 2 | **Backup must be restarted after `provision-lun-for-ad`** (Step 1.7) — failing to do this causes `Disk Mount Error` on the backup after migration. |
 | 3 | **msg-backbone shutdown: backup first, then primary** — reverse order when re-enabling (primary first). |
 | 4 | **Message spool shutdown: primary first, then backup** — reverse order when re-enabling. |
-| 5 | **AD key migration (`adkey-tool`) runs on primary only** — covers both p1 and p2 partitions. |
-| 6 | **Config-Sync must be `Up` before and after** — if it's down pre-migration, stop and investigate. |
-| 7 | **LUN WWN in `/dev/mapper/` may have a `3` prefix** — e.g. `60:01:40:57:...` → `/dev/mapper/360014057...`. |
-| 8 | **Thick provisioning required** — thin-provisioned LUNs are not supported for Solace appliance message spool. |
-| 9 | **If `assert-disk-ownership` fails** — check that message spool is shut down and that you are in the correct CLI mode (`admin > system message-spool`). |
+| 5 | **Option A — AD key migration (`adkey-tool`) runs on primary only** — covers both p1 and p2 partitions. |
+| 6 | **Option B — Spool reset must be done before `no hardware message-spool shutdown primary`** — not after. |
+| 7 | **Config-Sync must be `Up` before and after** — if it's down pre-migration, stop and investigate. |
+| 8 | **LUN WWN in `/dev/mapper/` may have a `3` prefix** — e.g. `60:01:40:57:...` → `/dev/mapper/360014057...`. |
+| 9 | **Thick provisioning required** — thin-provisioned LUNs are not supported for Solace appliance message spool. |
 | 10 | **`Disk Mount Error` on backup** — most commonly caused by missing p2 partition (backup not restarted after Step 1.6) or failed filesystem on p2. |
+| 11 | **`assert-disk-ownership`** — use when `Disk Contents: Invalid` is shown (ownership conflict due to IP/CVRID change). Requires spool to be shut down first. |
