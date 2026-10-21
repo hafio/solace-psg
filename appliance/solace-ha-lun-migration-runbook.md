@@ -28,7 +28,7 @@
   - [2.6 — Shutdown Message Spool (Primary First, Then Backup)](#26--shutdown-message-spool-primary-first-then-backup)
   - [2.7 — LUN Data Handling — Choose Option A or Option B](#27--lun-data-handling--choose-option-a-or-option-b)
     - [Option A — Migrate Data (Preserve Messages)](#-option-a--migrate-data-preserve-messages)
-    - [Option B — Fresh Start (Drop All Messages)](#-option-b--fresh-start-drop-all-messages)
+    - [Option B — Fresh Start (Drop All Messages)](#-option-b--fresh-start-drop-all-messages--no-data-migration)
   - [2.8 — Configure New LUN WWN on Both Appliances](#28--configure-new-lun-wwn-on-both-appliances)
   - [2.9 — Re-enable Message Spool](#29--re-enable-message-spool)
   - [2.10 — Re-enable msg-backbone (Primary First, Then Backup)](#210--re-enable-msg-backbone-primary-first-then-backup)
