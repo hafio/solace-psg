@@ -386,7 +386,7 @@ Proceed to **Step 2.8**.
 
 ---
 
-#### ❌ Option B — Fresh Start (Drop All Messages)
+#### ❌ Option B — Fresh Start (Drop All Messages) / No Data Migration
 
 Use this option if you **do not need to preserve spooled messages** and want to start fresh on the new LUN. This skips the shell-level data migration entirely.
 
